@@ -1,4 +1,6 @@
-// Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
+/**
+ * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
+ */
 package kubesys
 
 import (
@@ -9,14 +11,22 @@ import (
 	"net/http"
 )
 
-//  author: wuheng@iscas.ac.cn
-//  date: 2021/4/8
+/**
+ *      author: wuheng@iscas.ac.cn
+ *      date  : 2021/4/8
+ */
 type KubernetesClient struct {
 	Url        string
 	Token      string
 	Http       *http.Client
+	Analyzer   *KubernetesAnalyzer
 }
 
+/************************************************************
+ *
+ *      initialization
+ *
+ *************************************************************/
 func NewKubernetesClient(url string, token string) *KubernetesClient {
 	client := new(KubernetesClient)
 	client.Url = url
@@ -24,9 +34,19 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 	client.Http = &http.Client {Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}}
+	client.Analyzer = NewKubernetesAnalyzer()
 	return client
 }
 
+func (client *KubernetesClient) Init() {
+	client.Analyzer.Learning(*client)
+}
+
+/************************************************************
+ *
+ *      Common
+ *
+ *************************************************************/
 func (client *KubernetesClient) RequestResource(request *http.Request) (map[string]interface{}, error) {
 	res, err := client.Http.Do(request)
 
@@ -63,3 +83,22 @@ func GetArrayFromMap(values map[string]interface{}, key string) []interface{} {
 	return values[key].([]interface{})
 }
 
+func getNamespace(supportNS bool, value string) string {
+	if supportNS && len(value) != 0 {
+		return "namespaces/" + value + "/"
+	}
+	return ""
+}
+
+/************************************************************
+ *
+ *      Core
+ *
+ *************************************************************/
+func (client *KubernetesClient) ListResources(kind string, namespace string) (map[string]interface{}, error) {
+	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[kind]
+	req, _ := client.CreateRequest("GET", url, nil)
+	return client.RequestResource(req)
+}
