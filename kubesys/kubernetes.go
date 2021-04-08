@@ -113,6 +113,18 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (map[string]inter
 	return client.RequestResource(req)
 }
 
+func (client *KubernetesClient) UpdateResource(jsonStr string) (map[string]interface{}, error) {
+	var jsonObj = make(map[string]interface{})
+	json.Unmarshal([]byte(jsonStr), &jsonObj)
+	kind := jsonObj["kind"].(string)
+	namespace := jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + jsonObj["metadata"].(map[string]interface{})["name"].(string)
+	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
+	return client.RequestResource(req)
+}
+
 func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (map[string]interface{}, error) {
 	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
