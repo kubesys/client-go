@@ -4,7 +4,6 @@ package main
 import (
 	"./kubesys"
 	"encoding/json"
-	"fmt"
 )
 
 func main() {
@@ -19,7 +18,20 @@ func main() {
 	//fmt.Println(client.GetResource("Pod", "default", "busybox"))
 	//fmt.Println(client.DeleteResource("Pod", "default", "busybox"))
 	//fmt.Println(client.CreateResource(createPod()))
-	fmt.Println(client.UpdateResource(updatePod(client)))
+	//fmt.Println(client.UpdateResource(updatePod(client)))
+	//watchResources(client)
+	watchResource(client)
+
+}
+
+func watchResource(client *kubesys.KubernetesClient) {
+	watcher := kubesys.NewKubernetesWatcher(client)
+	client.WatchResource("Pod", "default", "busybox", watcher)
+}
+
+func watchResources(client *kubesys.KubernetesClient) {
+	watcher := kubesys.NewKubernetesWatcher(client)
+	client.WatchResources("Pod", "", watcher)
 }
 
 func createPod() string {

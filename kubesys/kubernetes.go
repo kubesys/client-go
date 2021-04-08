@@ -39,6 +39,17 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 	return client
 }
 
+func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
+	client := new(KubernetesClient)
+	client.Url = url
+	client.Token = token
+	client.Http = &http.Client {Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+	client.Analyzer = analyzer
+	return client
+}
+
 func (client *KubernetesClient) Init() {
 	client.Analyzer.Learning(*client)
 }
@@ -147,4 +158,18 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) (ma
 	url += client.Analyzer.FullKindToNameMapper[kind]
 	req, _ := client.CreateRequest("GET", url, nil)
 	return client.RequestResource(req)
+}
+
+func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher)  {
+	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/watch/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + name
+	watcher.Watching(url)
+}
+
+func (client *KubernetesClient) WatchResources(kind string, namespace string, watcher *KubernetesWatcher)  {
+	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/watch/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[kind]
+	watcher.Watching(url)
 }
