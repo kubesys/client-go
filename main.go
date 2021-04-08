@@ -4,6 +4,7 @@ package main
 import (
 	"./kubesys"
 	"encoding/json"
+	"fmt"
 )
 
 func main() {
@@ -14,14 +15,16 @@ func main() {
 
 	client := kubesys.NewKubernetesClient(url, token)
 	client.Init()
-	//fmt.Println(client.ListResources("apps.Deployment", ""))
-	//fmt.Println(client.GetResource("Pod", "default", "busybox"))
+	fmt.Println(client.ListResources("apps.Deployment", ""))
+	fmt.Println(client.GetResource("Pod", "default", "busybox"))
 	//fmt.Println(client.DeleteResource("Pod", "default", "busybox"))
 	//fmt.Println(client.CreateResource(createPod()))
 	//fmt.Println(client.UpdateResource(updatePod(client)))
-	//watchResources(client)
-	watchResource(client)
+	watchResources(client)
+	//watchResource(client)
 
+	//json, _ := client.GetResource("Pod", "default", "busybox")
+	//fmt.Println(json.GetObjectNode("metadata").GetString("name"))
 }
 
 func watchResource(client *kubesys.KubernetesClient) {
@@ -42,7 +45,7 @@ func updatePod(client *kubesys.KubernetesClient) string {
 	jsonObj, _  := client.GetResource("Pod", "default", "busybox")
 	labels := make(map[string]interface{})
 	labels["test"] = "test"
-	jsonObj["metadata"].(map[string]interface{})["labels"] = labels
-	updateObj, _ := json.Marshal(jsonObj)
+	jsonObj.GetMap("metadata")["labels"] = labels
+	updateObj, _ := json.Marshal(jsonObj.Object)
 	return string(updateObj)
 }
