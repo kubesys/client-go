@@ -6,6 +6,7 @@ package kubesys
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -92,19 +93,38 @@ func (client *KubernetesClient) CreateRequest(method, url string, body io.Reader
 	return req, nil
 }
 
-func GetMapFromMap(values map[string]interface{}, key string) map[string]interface{} {
-	return values[key].(map[string]interface{})
-}
-
-func GetArrayFromMap(values map[string]interface{}, key string) []interface{} {
-	return values[key].([]interface{})
-}
-
 func getNamespace(supportNS bool, value string) string {
 	if supportNS && len(value) != 0 {
 		return "namespaces/" + value + "/"
 	}
 	return ""
+}
+
+func getRealKind(kind string, apiVersion string) string {
+	index := strings.Index(apiVersion, "/")
+	if index == -1 {
+		return  kind
+	}
+	return apiVersion[0: index] + "." + kind
+}
+
+func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, error) {
+	index := strings.Index(kind, ".")
+	if index == -1 {
+		if len(mapper[kind]) == 1 {
+			return mapper[kind][0], nil
+		} else if len(mapper[kind]) == 0 {
+			return "", errors.New("invalid kind")
+		} else  {
+			value := ""
+			for _, s := range mapper[kind] {
+				value += "," + s
+			}
+			return "", errors.New("please use fullKind: " + value[1:])
+		}
+
+	}
+	return kind, nil
 }
 
 /************************************************************
@@ -116,7 +136,7 @@ func getNamespace(supportNS bool, value string) string {
 func (client *KubernetesClient) CreateResource(jsonStr string) (*ObjectNode, error) {
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
-	kind := jsonObj["kind"].(string)
+	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
 	namespace := jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
 	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
@@ -130,7 +150,7 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, err
 	fmt.Println(jsonStr)
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
-	kind := jsonObj["kind"].(string)
+	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
 	namespace := jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
 	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
@@ -141,42 +161,79 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, err
 }
 
 func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (*ObjectNode, error) {
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + name
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
 	req, _ := client.CreateRequest("DELETE", url, nil)
 	value, _ := client.RequestResource(req)
 	return NewObjectNodeWithValue(value), nil
 }
 
 func (client *KubernetesClient) GetResource(kind string, namespace string, name string) (*ObjectNode, error) {
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + name
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, _ := client.RequestResource(req)
 	return NewObjectNodeWithValue(value), nil
 }
 
 func (client *KubernetesClient) ListResources(kind string, namespace string) (*ObjectNode, error) {
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind]
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind]
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, _ := client.RequestResource(req)
 	return NewObjectNodeWithValue(value), nil
 }
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher)  {
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/watch/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + name
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/watch/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
 	watcher.Watching(url)
 }
 
 func (client *KubernetesClient) WatchResources(kind string, namespace string, watcher *KubernetesWatcher)  {
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/watch/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind]
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/watch/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind]
 	watcher.Watching(url)
 }

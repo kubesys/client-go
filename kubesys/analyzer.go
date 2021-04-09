@@ -12,7 +12,7 @@ import (
  *      date  : 2021/4/8
  */
 type KubernetesAnalyzer struct {
-	KindToFullKindMapper              map[string]string
+	KindToFullKindMapper              map[string][]string
 	FullKindToApiPrefixMapper         map[string]string
 
 	FullKindToNameMapper              map[string]string
@@ -26,7 +26,7 @@ type KubernetesAnalyzer struct {
 func NewKubernetesAnalyzer() *KubernetesAnalyzer {
 	analyzer := new(KubernetesAnalyzer)
 
-	analyzer.KindToFullKindMapper      = make(map[string]string)
+	analyzer.KindToFullKindMapper      = make(map[string][]string)
 	analyzer.FullKindToApiPrefixMapper = make(map[string]string)
 
 	analyzer.FullKindToNameMapper      = make(map[string]string)
@@ -57,7 +57,7 @@ func (analyzer *KubernetesAnalyzer) Learning (client KubernetesClient) {
 				fullKind := getFullKind(resourceValue, shortKind, apiVersion)
 
 				if _, ok := analyzer.FullKindToApiPrefixMapper[fullKind]; !ok {
-					analyzer.KindToFullKindMapper[shortKind] = fullKind
+					analyzer.KindToFullKindMapper[shortKind] = append(analyzer.KindToFullKindMapper[shortKind], fullKind)
 					analyzer.FullKindToApiPrefixMapper[fullKind] = client.Url + path
 
 					analyzer.FullKindToNameMapper[fullKind] = resourceValue["name"].(string)

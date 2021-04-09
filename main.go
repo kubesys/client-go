@@ -15,12 +15,13 @@ func main() {
 
 	client := kubesys.NewKubernetesClient(url, token)
 	client.Init()
-	fmt.Println(client.ListResources("apps.Deployment", ""))
-	fmt.Println(client.GetResource("Pod", "default", "busybox"))
+	//fmt.Println(len(client.Analyzer.KindToFullKindMapper["Deployment"]))
+	//fmt.Println(client.ListResources("Deployment", ""))
+	//fmt.Println(client.GetResource("Pod", "default", "busybox"))
 	//fmt.Println(client.DeleteResource("Pod", "default", "busybox"))
 	//fmt.Println(client.CreateResource(createPod()))
-	//fmt.Println(client.UpdateResource(updatePod(client)))
-	watchResources(client)
+	fmt.Println(client.UpdateResource(updatePod(client)))
+	//watchResources(client)
 	//watchResource(client)
 
 	//json, _ := client.GetResource("Pod", "default", "busybox")
