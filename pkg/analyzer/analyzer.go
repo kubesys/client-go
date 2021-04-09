@@ -1,10 +1,11 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
-package kubesys
+package analyzer
 
 import (
 	"strings"
+	. "kubesys/kubernetes-client-go/pkg/client"
 )
 
 /**
@@ -45,8 +46,8 @@ func (analyzer *KubernetesAnalyzer) Learning (client KubernetesClient) {
 	for _, v := range registryValues["paths"].([]interface{}) {
 		path := v.(string)
 		if strings.HasPrefix(path, "/api") &&
-					(len(strings.Split(path, "/")) == 4 ||
-						strings.EqualFold(path, "/api/v1")) {
+			(len(strings.Split(path, "/")) == 4 ||
+				strings.EqualFold(path, "/api/v1")) {
 			resourceRequest,_ := client.CreateRequest("GET", client.Url + path, nil)
 			resourceValues, _ := client.RequestResource(resourceRequest)
 			apiVersion := resourceValues["groupVersion"].(string)

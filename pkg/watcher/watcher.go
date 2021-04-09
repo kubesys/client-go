@@ -1,33 +1,42 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
-package kubesys
+package watcher
 
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	. "kubesys/kubernetes-client-go/pkg/client"
 )
+
 
 /**
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
  */
-type KubernetesWatcher struct {
-	Client     *KubernetesClient
+
+type WatchHandler interface {
+	DoAdded(obj map[string]interface{})
+	DoModified(obj map[string]interface{})
+	DoDeleted(obj map[string]interface{})
 }
+
+type KubernetesWatcher struct {
+	Client  *KubernetesClient
+	handler WatchHandler
+}
+
 
 /************************************************************
  *
  *      initialization
  *
  *************************************************************/
-func NewKubernetesWatcher(client *KubernetesClient) *KubernetesWatcher {
-	watcher := new(KubernetesWatcher)
-
-	watcher.Client = client
-
-	return watcher
+func NewKubernetesWatcher(client *KubernetesClient, handler WatchHandler) *KubernetesWatcher {
+	return &KubernetesWatcher{
+		Client: client,
+		handler: handler,
+	}
 }
 
 func (watcher *KubernetesWatcher) Watching(url string) {
@@ -39,28 +48,12 @@ func (watcher *KubernetesWatcher) Watching(url string) {
 		line, _ := reader.ReadBytes('\n')
 		var jsonObj = make(map[string]interface{})
 		json.Unmarshal([]byte(line), &jsonObj)
-
 		if jsonObj["type"] == "ADDED" {
-			watcher.Add(jsonObj["object"].(map[string]interface{}))
+			watcher.handler.DoAdded(jsonObj["object"].(map[string]interface{}))
 		} else if jsonObj["type"] == "MODIFIED" {
-			watcher.Modify(jsonObj["object"].(map[string]interface{}))
+			watcher.handler.DoModified(jsonObj["object"].(map[string]interface{}))
 		} else if jsonObj["type"] == "DELETED" {
-			watcher.Delete(jsonObj["object"].(map[string]interface{}))
+			watcher.handler.DoDeleted(jsonObj["object"].(map[string]interface{}))
 		}
 	}
-}
-
-func (watcher *KubernetesWatcher) Add(obj map[string]interface{}) {
-	fmt.Println("ADDED")
-	fmt.Println(obj)
-}
-
-func (watcher *KubernetesWatcher) Modify(obj map[string]interface{}) {
-	fmt.Println("MODIFIED")
-	fmt.Println(obj)
-}
-
-func (watcher *KubernetesWatcher) Delete(obj map[string]interface{}) {
-	fmt.Println("DELETED")
-	fmt.Println(obj)
 }

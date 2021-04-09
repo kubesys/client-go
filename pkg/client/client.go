@@ -1,7 +1,7 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
-package kubesys
+package client
 
 import (
 	"crypto/tls"
@@ -12,6 +12,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	. "kubesys/kubernetes-client-go/pkg/analyzer"
+	. "kubesys/kubernetes-client-go/pkg/util"
+	. "kubesys/kubernetes-client-go/pkg/watcher"
 )
 
 /**
