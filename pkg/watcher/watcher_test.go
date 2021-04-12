@@ -3,7 +3,7 @@ package watcher
 import (
 	"fmt"
 	"testing"
-	. "kubesys/kubernetes-client-go/pkg/client"
+	. "github.com/kubesys/kubernetes-client-go/pkg/client"
 )
 
 type PrintWatchHandler struct {}
