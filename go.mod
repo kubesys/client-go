@@ -1,3 +1,3 @@
-module kubesys/kubernetes-client-go
+module github.com/kubesys/kubernetes-client-go
 
 go 1.15

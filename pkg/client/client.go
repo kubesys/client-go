@@ -12,10 +12,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	. "kubesys/kubernetes-client-go/pkg/analyzer"
-	. "kubesys/kubernetes-client-go/pkg/util"
-	. "kubesys/kubernetes-client-go/pkg/watcher"
+	. "github.com/kubesys/kubernetes-client-go/pkg/analyzer"
+	. "github.com/kubesys/kubernetes-client-go/pkg/util"
+	. "github.com/kubesys/kubernetes-client-go/pkg/watcher"
 )
 
 /**

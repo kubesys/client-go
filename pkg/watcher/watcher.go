@@ -6,7 +6,7 @@ package watcher
 import (
 	"bufio"
 	"encoding/json"
-	. "kubesys/kubernetes-client-go/pkg/client"
+	. "github.com/kubesys/kubernetes-client-go/pkg/client"
 )
 
 

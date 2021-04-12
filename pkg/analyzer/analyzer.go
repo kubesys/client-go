@@ -5,7 +5,7 @@ package analyzer
 
 import (
 	"strings"
-	. "kubesys/kubernetes-client-go/pkg/client"
+	. "github.com/kubesys/kubernetes-client-go/pkg/client"
 )
 
 /**
