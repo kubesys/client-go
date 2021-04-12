@@ -1,11 +1,10 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
-package analyzer
+package kubesys
 
 import (
 	"strings"
-	. "github.com/kubesys/kubernetes-client-go/pkg/client"
 )
 
 /**

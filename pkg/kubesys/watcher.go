@@ -1,12 +1,11 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
-package watcher
+package kubesys
 
 import (
 	"bufio"
 	"encoding/json"
-	. "github.com/kubesys/kubernetes-client-go/pkg/client"
 )
 
 

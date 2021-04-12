@@ -1,20 +1,18 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
-package client
+package kubesys
 
 import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	. "github.com/kubesys/kubernetes-client-go/pkg/util"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	. "github.com/kubesys/kubernetes-client-go/pkg/analyzer"
-	. "github.com/kubesys/kubernetes-client-go/pkg/util"
-	. "github.com/kubesys/kubernetes-client-go/pkg/watcher"
 )
 
 /**

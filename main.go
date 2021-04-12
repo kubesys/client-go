@@ -3,14 +3,14 @@ package main
 
 import (
 	"encoding/json"
-	. "github.com/kubesys/kubernetes-client-go/pkg/client"
+	"github.com/kubesys/kubernetes-client-go/pkg/kubesys"
 )
 
 func main() {
 
 	url := ""
 	token := ""
-	client := NewKubernetesClient(url, token)
+	client := kubesys.NewKubernetesClient(url, token)
 	client.Init()
 	client.GetResource("Pod", "default", "busybox")
 
@@ -40,7 +40,7 @@ func createPod() string {
 	return "{\n  \"apiVersion\": \"v1\",\n  \"kind\": \"Pod\",\n  \"metadata\": {\n    \"name\": \"busybox\",\n    \"namespace\": \"default\"\n  },\n  \"spec\": {\n    \"containers\": [\n      {\n        \"image\": \"busybox\",\n        \"env\": [{\n           \"name\": \"abc\",\n           \"value\": \"abc\"\n        }],\n        \"command\": [\n          \"sleep\",\n          \"3600\"\n        ],\n        \"imagePullPolicy\": \"IfNotPresent\",\n        \"name\": \"busybox\"\n      }\n    ],\n    \"restartPolicy\": \"Always\"\n  }\n}"
 }
 
-func updatePod(client *KubernetesClient) string {
+func updatePod(client *kubesys.KubernetesClient) string {
 	jsonObj, _  := client.GetResource("Pod", "default", "busybox")
 	labels := make(map[string]interface{})
 	labels["test"] = "test"
