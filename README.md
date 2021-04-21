@@ -5,7 +5,7 @@
 ## 技术架构
 如图1所示，本管理构件的核心是学习器，通过分析和学习Kubernetes原生资源（Pod）和用户自定义资源进行分析，根据URL规则，形成知识。<br>当用户根据API进行资源访问时，其核心思想就是根据类型进行查询，映射为Kubernetes的URL，进行代理执行。
 
-![图1 多云平台服务通信及管理构件架构图]()
+![图1 多云平台服务通信及管理构件架构图](https://raw.githubusercontent.com/kubesys/kubernetes-client-go/main/pics/arch.jpg)
 ## 技术特色
 如何面向Kubernetes的自定义资源类型提供管理客户端仍面临巨大挑战，已有的客户端框架或适配工作量巨大（如Java fabric8），学习成本高，或主要采用代码生成技术（code-gen），灵活性不够。此外，Kubernetes版本迭代频繁且存在不兼容问题，可能需要频繁更新开发框架版本。<br>为应对上述问题，本文设计一款学习驱动的，基于JSON的Kubernetes客户端，通过学习自修正以应对Kubernetes版本迭代频繁且不兼容问题，采用JSON解决已有框架学习成本高和灵活性不足的问题。
 
@@ -44,13 +44,45 @@ require (
 )
 ```
 ## 使用说明
-* 获取Kubernetes集群访问API Server的URL和token
+* 获取Kubernetes集群访问API Server的URL和token 
 ```
+kubectl create -f https://raw.githubusercontent.com/kubesys/kubernetes-client-go/main/account.yaml
+
+kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep kubernetes-client | awk '{print $1}') | grep "token:" | awk -F":" '{print$2}' | sed 's/ //g'
 
 ```
 * 创建客户端
+```go
+url := "https://xxx.xxx.xxx.xxx:6443"
+token := "<your token>"
+client := kubesys.NewKubernetesClient(url, token)
+client.Init()
+```
 
 * 创建资源
+```
+jsonStr := `{
+  "apiVersion": "v1",
+  "kind": "Pod",
+  "metadata": {
+    "name": "busybox",
+    "namespace": "default",
+    "labels": {
+      "test": "test"
+    }
+  }
+}`
+client.CreateResource(jsonStr)
+```
+* 查询资源
+```
+client.GetResource("Pod", "default", "busybox")
+```
 * 更新资源
+```
+client.UpdateResource()
+```
 * 删除资源
-* 监听资源
+```
+client.DeleteResource("Pod", "default", "busybox")
+```

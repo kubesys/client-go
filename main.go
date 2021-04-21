@@ -13,7 +13,6 @@ func main() {
 	client := kubesys.NewKubernetesClient(url, token)
 	client.Init()
 	client.GetResource("Pod", "default", "busybox")
-
 	//fmt.Println(len(client.Analyzer.KindToFullKindMapper["Deployment"]))
 	//fmt.Println(client.ListResources("Deployment", ""))
 	//fmt.Println(client.GetResource("Pod", "default", "busybox"))
