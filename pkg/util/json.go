@@ -100,4 +100,8 @@ func (json *ArrayNode) GetInt(idx int) int {
 	return json.Object[idx].(int)
 }
 
+func (json *ArrayNode) Size() int {
+	return len(json.Object)
+}
+
 
