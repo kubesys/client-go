@@ -238,3 +238,54 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	url += client.Analyzer.FullKindToNameMapper[fullKind]
 	watcher.Watching(url)
 }
+
+
+/************************************************************
+ *
+ *      Core for Object
+ *
+ *************************************************************/
+
+
+func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*ObjectNode, error) {
+	jsonStr, err := json.Marshal(obj)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return client.CreateResource(string(jsonStr))
+}
+
+func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*ObjectNode, error) {
+	jsonStr, err := json.Marshal(obj)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return client.UpdateResource(string(jsonStr))
+}
+
+
+/************************************************************
+ *
+ *      With Label Filter
+ *
+ *************************************************************/
+func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) (*ObjectNode, error) {
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	url += "?labelSelector="
+	for key, value := range labels {
+		url += key + "%3D" + value
+	}
+	req, _ := client.CreateRequest("GET", url, nil)
+	value, _ := client.RequestResource(req)
+	return NewObjectNodeWithValue(value), nil
+}
