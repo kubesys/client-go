@@ -3,6 +3,11 @@
  */
 package util
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 /**
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
@@ -80,6 +85,7 @@ func (json *ObjectNode) GetString(key string) string {
 	return json.Object[key].(string)
 }
 
+
 func (json *ArrayNode) GetString(idx int) string {
 	return json.Object[idx].(string)
 }
@@ -104,4 +110,16 @@ func (json *ArrayNode) Size() int {
 	return len(json.Object)
 }
 
-
+func (obj *ObjectNode) Into(v interface{}) error {
+	objByte, err := json.Marshal(obj.Object)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	err = json.Unmarshal(objByte, v)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
