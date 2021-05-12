@@ -64,7 +64,9 @@ func (client *KubernetesClient) Init() {
  *************************************************************/
 func (client *KubernetesClient) RequestResource(request *http.Request) (map[string]interface{}, error) {
 	res, err := client.Http.Do(request)
-
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New("request status " + res.Status)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +191,10 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
 	req, _ := client.CreateRequest("GET", url, nil)
-	value, _ := client.RequestResource(req)
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
 	return NewObjectNodeWithValue(value), nil
 }
 
