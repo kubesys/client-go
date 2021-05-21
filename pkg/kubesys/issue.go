@@ -6,3 +6,7 @@ package kubesys
 func Issue1 () string {
 	return  "{\"apiVersion\": \"v1\",\"kind\": \"Node\",\"metadata\": {\"name\": \"test\"}}"
 }
+
+func Issue2 () string {
+	return  "{\"apiVersion\": \"v1\",\"kind\": \"Node\",\"metadata\": {\"name\": \"test\"}}"
+}

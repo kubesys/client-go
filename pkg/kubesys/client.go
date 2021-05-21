@@ -148,7 +148,10 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (*ObjectNode, err
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[kind]
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(jsonStr))
-	value, _ := client.RequestResource(req)
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
 	return NewObjectNodeWithValue(value), nil
 }
 
@@ -165,7 +168,10 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, err
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + jsonObj["metadata"].(map[string]interface{})["name"].(string)
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
-	value, _ := client.RequestResource(req)
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
 	return NewObjectNodeWithValue(value), nil
 }
 
@@ -181,7 +187,10 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
 	req, _ := client.CreateRequest("DELETE", url, nil)
-	value, _ := client.RequestResource(req)
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
 	return NewObjectNodeWithValue(value), nil
 }
 
@@ -216,7 +225,10 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) (*O
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[fullKind]
 	req, _ := client.CreateRequest("GET", url, nil)
-	value, _ := client.RequestResource(req)
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
 	return NewObjectNodeWithValue(value), nil
 }
 
