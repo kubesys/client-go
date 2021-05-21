@@ -156,7 +156,6 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (*ObjectNode, err
 }
 
 func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, error) {
-	fmt.Println(jsonStr)
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
 	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
@@ -262,6 +261,25 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	watcher.Watching(url)
 }
 
+func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*ObjectNode, error) {
+	var jsonObj = make(map[string]interface{})
+	json.Unmarshal([]byte(jsonStr), &jsonObj)
+	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
+	namespace := ""
+	if _,ok := jsonObj["metadata"].(map[string]interface{})["namespace"];ok {
+		namespace = jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+	}
+	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + jsonObj["metadata"].(map[string]interface{})["name"].(string)
+	url += "/status"
+	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
+	return NewObjectNodeWithValue(value), nil
+}
 
 /************************************************************
  *
