@@ -140,7 +140,10 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (*ObjectNode, err
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
 	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
-	namespace := jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+	namespace := ""
+	if _,ok := jsonObj["metadata"].(map[string]interface{})["namespace"];ok {
+		namespace = jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+	}
 	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[kind]
@@ -154,7 +157,10 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, err
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
 	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
-	namespace := jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+	namespace := ""
+	if _,ok := jsonObj["metadata"].(map[string]interface{})["namespace"];ok {
+		namespace = jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+	}
 	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
 	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + jsonObj["metadata"].(map[string]interface{})["name"].(string)
