@@ -111,6 +111,9 @@ func (json *ArrayNode) Size() int {
 }
 
 func (obj *ObjectNode) Into(v interface{}) error {
+	if obj == nil {
+		return nil
+	}
 	objByte, err := json.Marshal(obj.Object)
 	if err != nil {
 		fmt.Println(err)
