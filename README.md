@@ -49,7 +49,7 @@ Here, the token can be created and get by following commands:
 1. create token
 
 ```yaml
-kubectl create -f https://raw.githubusercontent.com/kubesys/kubernetes-client-go/master/account.yaml
+kubectl create -f https://raw.githubusercontent.com/kubesys/client-go/master/account.yaml
 ```
 2. get token
 
