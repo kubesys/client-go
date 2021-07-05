@@ -3,22 +3,16 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/kubesys/client-go/pkg/kubesys"
 )
 
 func main() {
 
-	url := "https://39.106.40.190:6443"
-	tok := "eyJhbGciOiJSUzI1NiIsImtpZCI6ImVDUzZnUkJ2OHI0VVA2VWpkdU1SLWNXTlF4aEhLQjNyamU2ZHhsd014cWMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWNsaWVudC10b2tlbi16ZGxyZiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWNsaWVudCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImJlZGJjMGUzLWJjNDAtNGQ2Zi1iMTAxLTk3ODkzOGZjYTZhNyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTprdWJlcm5ldGVzLWNsaWVudCJ9.Qmfmf4QwubartSyLJqIW2gXHdlyKlqQsNknIVtRNjfaydw6qCa8XuGS6egqPwiN-Al8GaoGuVflyJy-bolj-aVWY-a-9fWUB0itV4SdYTNeQV5hYv6sbhnuvSo3nHp2jyZjlRyvEQNxKyQaJF6eodJPjgzCVoj8BhsSqTu7vbzCTEMEnIz8AMGJLF9G6JuffBTpO83Ch_hVbquQnKQJjK60911D-5S6SD3SilQyk_WdYblorxbRXsSm8VNkHz6BWrfa7uCDcw46XnfVVuCyRKOGmIAeIWIDq2uaI6nECkcujWCCwYzEePq-SsXU4MRwFAYd-Rdt9Q8JUw9njR0I-5A"
+	url := ""
+	tok := ""
 	client := kubesys.NewKubernetesClient(url, tok)
 	client.Init()
-	obj1,err1 := client.CreateResource(kubesys.Issue2())
-	fmt.Println(err1)
-	fmt.Println(obj1)
-	obj2,err2 := client.CreateResource(kubesys.Issue2())
-	fmt.Println(err2)
-	fmt.Println(obj2)
+	
 	//client.GetResource("Pod", "default", "busybox")
 	//fmt.Println(len(client.Analyzer.KindToFullKindMapper["Deployment"]))
 	//fmt.Println(client.ListResources("Deployment", ""))

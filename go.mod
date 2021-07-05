@@ -1,3 +1,3 @@
-module client-go
+module github.com/kubesys/client-go
 
 go 1.15
