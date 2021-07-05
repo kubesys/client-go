@@ -231,6 +231,38 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) (*O
 	return NewObjectNodeWithValue(value), nil
 }
 
+func (client *KubernetesClient) BindResources(pod *ObjectNode, host string) (*ObjectNode, error) {
+	var jsonObj = make(map[string]interface{})
+	jsonObj["apiVersion"] = "v1"
+	jsonObj["kind"] = "Binding"
+
+	var meta = make(map[string]interface{})
+	meta["name"] = pod.GetObjectNode("metadata").GetString("name")
+	meta["namespace"] = pod.GetObjectNode("metadata").GetString("namespace")
+	jsonObj["metadata"] = meta
+
+	var target = make(map[string]interface{})
+	target["apiVersion"] = "v1"
+	target["kind"] = "Node"
+	target["name"] = host
+	jsonObj["target"] = target
+
+	kind := getRealKind(pod.GetString("kind"), pod.GetString("apiVersion"))
+	namespace := pod.GetObjectNode("metadata").GetString("namespace")
+	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[kind] + "/"
+	url += pod.GetObjectNode("metadata").GetString("name") + "/binding"
+
+	jsonBytes,_ := json.Marshal(jsonObj)
+	req, _ := client.CreateRequest("POST", url, strings.NewReader(string(jsonBytes)))
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
+	return NewObjectNodeWithValue(value), nil
+}
+
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher)  {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
