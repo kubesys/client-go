@@ -1,4 +1,4 @@
-# Kubernetes-client-go
+# client-go
 
 We expect to provide a go client:
 - **Flexibility**. It can support all Kubernetes-based systems with minimized extra development, such as [Openshift](https://www.redhat.com/en/technologies/cloud-computing/openshift), [istio](https://istio.io/), etc.
