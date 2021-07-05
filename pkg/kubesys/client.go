@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	. "github.com/kubesys/kubernetes-client-go/pkg/util"
+	. "github.com/kubesys/client-go/pkg/util"
 	"io"
 	"io/ioutil"
 	"net/http"
