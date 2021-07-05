@@ -19,7 +19,7 @@ We expect to provide a go client:
 
 
 ```shell
-git clone --recursive https://github.com/kubesys/kubernetes-client-go
+git clone --recursive https://github.com/kubesys/client-go
 ```
 
 ### Maven users
@@ -106,7 +106,12 @@ client.DeleteResource("Pod", "default", "busybox")
 
 ```go
 fmt.Println(client.GetKinds());
-fmt.Println(client.GetLatestApiVersion("Pod"));
-fmt.Println(client.GetPlural("Pod"));
+```
+
+## for developer
+
+```
+go mod init client-go
+go mod tidy
 ```
 
