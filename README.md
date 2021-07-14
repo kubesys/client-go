@@ -28,6 +28,7 @@ git clone --recursive https://github.com/kubesys/client-go
 ## Usage
 
 - [Usage](#usage)
+    - [中文文档](https://www.yuque.com/kubesys/kubernetes-client/overview)
     - [Creating a client](#creating-a-client)
     - [Simple example](#simple-example)
     - [Get all kinds](#get-all-kinds)
