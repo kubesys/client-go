@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	. "github.com/kubesys/client-go/pkg/util"
+	"github.com/kubesys/kubernetes-client-go/pkg/util"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -136,7 +136,7 @@ func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, er
  *
  *************************************************************/
 
-func (client *KubernetesClient) CreateResource(jsonStr string) (*ObjectNode, error) {
+func (client *KubernetesClient) CreateResource(jsonStr string) (*util.ObjectNode, error) {
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
 	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
@@ -152,10 +152,10 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (*ObjectNode, err
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
-func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, error) {
+func (client *KubernetesClient) UpdateResource(jsonStr string) (*util.ObjectNode, error) {
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
 	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
@@ -171,10 +171,10 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) (*ObjectNode, err
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
-func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (*ObjectNode, error) {
+func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (*util.ObjectNode, error) {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 
@@ -190,10 +190,10 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
-func (client *KubernetesClient) GetResource(kind string, namespace string, name string) (*ObjectNode, error) {
+func (client *KubernetesClient) GetResource(kind string, namespace string, name string) (*util.ObjectNode, error) {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 
@@ -209,10 +209,10 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
-func (client *KubernetesClient) ListResources(kind string, namespace string) (*ObjectNode, error) {
+func (client *KubernetesClient) ListResources(kind string, namespace string) (*util.ObjectNode, error) {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 
@@ -228,10 +228,10 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) (*O
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
-func (client *KubernetesClient) BindResources(pod *ObjectNode, host string) (*ObjectNode, error) {
+func (client *KubernetesClient) BindResources(pod *util.ObjectNode, host string) (*util.ObjectNode, error) {
 	var jsonObj = make(map[string]interface{})
 	jsonObj["apiVersion"] = "v1"
 	jsonObj["kind"] = "Binding"
@@ -260,7 +260,7 @@ func (client *KubernetesClient) BindResources(pod *ObjectNode, host string) (*Ob
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher)  {
@@ -293,7 +293,7 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	watcher.Watching(url)
 }
 
-func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*ObjectNode, error) {
+func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*util.ObjectNode, error) {
 	var jsonObj = make(map[string]interface{})
 	json.Unmarshal([]byte(jsonStr), &jsonObj)
 	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
@@ -310,7 +310,7 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*ObjectNod
 	if err != nil {
 		return nil, err
 	}
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
 
 /************************************************************
@@ -320,7 +320,7 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*ObjectNod
  *************************************************************/
 
 
-func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*ObjectNode, error) {
+func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*util.ObjectNode, error) {
 	jsonStr, err := json.Marshal(obj)
 	if err != nil {
 		fmt.Println(err)
@@ -329,7 +329,7 @@ func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*ObjectNo
 	return client.CreateResource(string(jsonStr))
 }
 
-func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*ObjectNode, error) {
+func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*util.ObjectNode, error) {
 	jsonStr, err := json.Marshal(obj)
 	if err != nil {
 		fmt.Println(err)
@@ -344,7 +344,7 @@ func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*ObjectNo
  *      With Label Filter
  *
  *************************************************************/
-func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) (*ObjectNode, error) {
+func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) (*util.ObjectNode, error) {
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 
 	if err != nil {
@@ -360,5 +360,5 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 	}
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, _ := client.RequestResource(req)
-	return NewObjectNodeWithValue(value), nil
+	return util.NewObjectNodeWithValue(value), nil
 }
