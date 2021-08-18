@@ -3,7 +3,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/kubesys/client-go/pkg/kubesys"
+	"github.com/kubesys/kubernetes-client-go/pkg/kubesys"
 )
 
 func main() {
