@@ -11,7 +11,6 @@ import (
 	"github.com/kubesys/kubernetes-client-go/pkg/util"
 	"io"
 	"io/ioutil"
-	"k8s.io/api/core/v1"
 	"net/http"
 	"strings"
 )
@@ -360,86 +359,4 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, _ := client.RequestResource(req)
 	return util.NewObjectNodeWithValue(value), nil
-}
-
-/************************************************************
- *
- *      Additional
- *
- *************************************************************/
-func (client *KubernetesClient) GetNode(nodeName string) (*v1.Node, error) {
-	node, err := client.GetResource("Node", "", nodeName)
-	if err != nil {
-		return nil, err
-	}
-	nodeBytes, _ := json.Marshal(node.Object)
-	var out v1.Node
-	err = json.Unmarshal(nodeBytes, &out)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (client *KubernetesClient) GetPod(podName, namespace string) (*v1.Pod, error) {
-	pod, err := client.GetResource("Pod", namespace, podName)
-	if err != nil {
-		return nil, err
-	}
-	podBytes, _ := json.Marshal(pod.Object)
-	var out v1.Pod
-	err = json.Unmarshal(podBytes, &out)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (client *KubernetesClient) UpdateNodeStatus(newNode *v1.Node) error {
-	nodeJson, err := json.Marshal(newNode)
-	if err != nil {
-		return nil
-	}
-	_, err = client.UpdateResourceStatus(string(nodeJson))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (client *KubernetesClient) GetPodsOnNode(nodeName, namespace string) ([]v1.Pod, error) {
-	podList, err := client.ListResources("Pod", namespace)
-	if err != nil {
-		return nil, err
-	}
-	podListBytes, err := json.Marshal(podList.Object)
-	if err != nil {
-		return nil, err
-	}
-	var podListObject v1.PodList
-	err = json.Unmarshal(podListBytes, &podListObject)
-	if err != nil {
-		return nil, err
-	}
-	var pods []v1.Pod
-	for _, pod := range podListObject.Items {
-		if pod.Spec.NodeName == nodeName {
-			pods = append(pods, pod)
-		}
-	}
-	return pods, nil
-}
-
-func (client *KubernetesClient) GetPendingPodsOnNode(nodeName, namespace string) ([]v1.Pod, error) {
-	candidatePods, err := client.GetPodsOnNode(nodeName, namespace)
-	if err != nil {
-		return nil, err
-	}
-	var pods []v1.Pod
-	for _, pod := range candidatePods {
-		if pod.Status.Phase == "Pending" {
-			pods = append(pods, pod)
-		}
-	}
-	return pods, nil
 }
