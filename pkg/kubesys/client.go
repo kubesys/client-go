@@ -360,3 +360,27 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 	value, _ := client.RequestResource(req)
 	return util.NewObjectNodeWithValue(value), nil
 }
+
+/************************************************************
+ *
+ *      With Field Filter
+ *
+ *************************************************************/
+func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) (*util.ObjectNode, error) {
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	url += "?fieldSelector="
+	for key, value := range fields {
+		url += key + "%3D" + value + ","
+	}
+	req, _ := client.CreateRequest("GET", url, nil)
+	value, _ := client.RequestResource(req)
+	return util.NewObjectNodeWithValue(value), nil
+}
