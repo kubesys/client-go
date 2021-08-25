@@ -354,8 +354,9 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 	url += client.Analyzer.FullKindToNameMapper[fullKind]
 	url += "?labelSelector="
 	for key, value := range labels {
-		url += key + "%3D" + value
+		url += key + "%3D" + value + ","
 	}
+	url = url[:len(url)-1]
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, _ := client.RequestResource(req)
 	return util.NewObjectNodeWithValue(value), nil
@@ -380,6 +381,7 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 	for key, value := range fields {
 		url += key + "%3D" + value + ","
 	}
+	url = url[:len(url)-1]
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, _ := client.RequestResource(req)
 	return util.NewObjectNodeWithValue(value), nil
