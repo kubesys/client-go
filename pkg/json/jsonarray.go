@@ -1,9 +1,16 @@
+/**
+ * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
+ */
 package json
 
 type JsonArray struct {
 	s []*Value
 }
 
+/**
+ *      author: wuheng@iscas.ac.cn
+ *      date  : 2021/9/29
+ */
 func (j *JsonArray) Get(index int) (*Value, error) {
 	if index >= len(j.s) {
 		return nil, IndexOutOfRangeError

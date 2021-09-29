@@ -1,7 +1,14 @@
+/**
+ * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
+ */
 package json
 
 import "strconv"
 
+/**
+ *      author: wuheng@iscas.ac.cn
+ *      date  : 2021/9/29
+ */
 // ---------- Boolean ----------
 type Boolean struct {
 	Valid bool

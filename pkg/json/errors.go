@@ -1,3 +1,6 @@
+/**
+ * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
+ */
 package json
 
 import (
@@ -5,6 +8,10 @@ import (
 	"errors"
 )
 
+/**
+ *      author: wuheng@iscas.ac.cn
+ *      date  : 2021/9/29
+ */
 var (
 	IndexOutOfRangeError = errors.New("index out of range")
 	ValueNotNumberError = errors.New("value is not number")

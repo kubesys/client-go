@@ -1,7 +1,12 @@
-// 
-
+/**
+ * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
+ */
 package json
 
+/**
+ *      author: wuheng@iscas.ac.cn
+ *      date  : 2021/9/29
+ */
 type JsonObject struct {
 	m map[string]*Value
 }
