@@ -2,7 +2,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/kubesys/kubernetes-client-go/pkg/kubesys"
 )
@@ -15,13 +14,11 @@ func main() {
 	client.Init()
 
 	//createResource(client)
-	deleteResource(client)
-	//fmt.Println(client)
-	//client.GetResource("Pod", "default", "busybox")
-	//fmt.Println(len(client.Analyzer.KindToFullKindMapper["Deployment"]))
-	//fmt.Println(client.ListResources("Deployment", ""))
-	//fmt.Println(client.GetResource("Pod", "default", "busybox"))
-	//fmt.Println(client.UpdateResource(updatePod(client)))
+	//getResource(client)
+	updateResource(client)
+	//deleteResource(client)
+	//listResources(client)
+
 	//watchResources(client)
 	//watchResource(client)
 	//json, _ := client.GetResource("Pod", "default", "busybox")
@@ -39,8 +36,11 @@ func main() {
 //}
 
 func createResource(client *kubesys.KubernetesClient) {
-	json, _ := client.CreateResource(createPod())
-	fmt.Println(json)
+	json, err := client.CreateResource(createPod())
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(json.ToString())
 }
 
 func deleteResource(client *kubesys.KubernetesClient) {
@@ -48,15 +48,34 @@ func deleteResource(client *kubesys.KubernetesClient) {
 	fmt.Println(json.ToString())
 }
 
+func getResource(client *kubesys.KubernetesClient) {
+	json, _ := client.GetResource("Pod", "default", "busybox")
+	fmt.Println(json.ToString())
+}
+
+func listResources(client *kubesys.KubernetesClient) {
+	json,_ := client.ListResources("Deployment", "")
+	fmt.Println(json.ToString())
+}
+
 func createPod() string {
 	return "{\n  \"apiVersion\": \"v1\",\n  \"kind\": \"Pod\",\n  \"metadata\": {\n    \"name\": \"busybox\",\n    \"namespace\": \"default\"\n  },\n  \"spec\": {\n    \"containers\": [\n      {\n        \"image\": \"busybox\",\n        \"env\": [{\n           \"name\": \"abc\",\n           \"value\": \"abc\"\n        }],\n        \"command\": [\n          \"sleep\",\n          \"3600\"\n        ],\n        \"imagePullPolicy\": \"IfNotPresent\",\n        \"name\": \"busybox\"\n      }\n    ],\n    \"restartPolicy\": \"Always\"\n  }\n}"
 }
 
-func updatePod(client *kubesys.KubernetesClient) string {
-	jsonObj, _  := client.GetResource("Pod", "default", "busybox")
+func updateResource(client *kubesys.KubernetesClient) {
+
 	labels := make(map[string]interface{})
 	labels["test"] = "test"
-	jsonObj.GetJsonObject("metadata").Put("labels", labels)
-	updateObj, _ := json.Marshal(jsonObj)
-	return string(updateObj)
+
+	obj, _  := client.GetResource("Pod", "default", "busybox")
+	metadata := obj.GetJsonObject("metadata")
+	metadata.Put("labels", labels)
+	obj.Put("metadata", metadata)
+	fmt.Println(obj.ToString())
+
+	json,err := client.UpdateResource(obj.ToString())
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(json.ToString())
 }

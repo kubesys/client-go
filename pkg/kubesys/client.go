@@ -182,17 +182,12 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (*jsonObj.JsonObj
 
 	url := client.baseUrl(fullKind(inputJson), namespace(inputJson))
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(jsonStr))
-	value, err := client.RequestResource(req)
+	_, err = client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return inputJson, nil
 }
 
 func (client *KubernetesClient) UpdateResource(jsonStr string) (*jsonObj.JsonObject, error) {
@@ -387,7 +382,6 @@ func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*jsonObj.
 func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*jsonObj.JsonObject, error) {
 	jsonStr, err := json.Marshal(obj)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return client.UpdateResource(string(jsonStr))
