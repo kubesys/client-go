@@ -44,7 +44,7 @@ func updatePod(client *kubesys.KubernetesClient) string {
 	jsonObj, _  := client.GetResource("Pod", "default", "busybox")
 	labels := make(map[string]interface{})
 	labels["test"] = "test"
-	jsonObj.GetMap("metadata")["labels"] = labels
-	updateObj, _ := json.Marshal(jsonObj.Object)
+	jsonObj.GetJsonObject("metadata").Put("labels", labels)
+	updateObj, _ := json.Marshal(jsonObj)
 	return string(updateObj)
 }

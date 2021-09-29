@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/kubesys/kubernetes-client-go/pkg/util"
+	jsonObj "github.com/kubesys/kubernetes-client-go/pkg/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -62,23 +62,21 @@ func (client *KubernetesClient) Init() {
  *      Common
  *
  *************************************************************/
-func (client *KubernetesClient) RequestResource(request *http.Request) (map[string]interface{}, error) {
+func (client *KubernetesClient) RequestResource(request *http.Request) (string, error) {
 	res, err := client.Http.Do(request)
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("request status " + res.Status)
+		return "", errors.New("request status " + res.Status)
 	}
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	var result = make(map[string]interface{})
-	json.Unmarshal(body, &result)
-	return result, nil
+	return string(body), nil
 }
 
 func (client *KubernetesClient) CreateRequest(method, url string, body io.Reader) (*http.Request, error) {
@@ -96,19 +94,57 @@ func (client *KubernetesClient) CreateRequest(method, url string, body io.Reader
 	return req, nil
 }
 
-func getNamespace(supportNS bool, value string) string {
+func isNamespaced(supportNS bool, value string) string {
 	if supportNS && len(value) != 0 {
 		return "namespaces/" + value + "/"
 	}
 	return ""
 }
 
+// deprecated
 func getRealKind(kind string, apiVersion string) string {
 	index := strings.Index(apiVersion, "/")
 	if index == -1 {
 		return kind
 	}
 	return apiVersion[0:index] + "." + kind
+}
+
+func namespace(jsonObj *jsonObj.JsonObject) string {
+	namespace := ""
+	if jsonObj.GetJsonObject("metadata").HasKey("namespace")  {
+		namespace, _ = jsonObj.GetJsonObject("metadata").GetString("namespace")
+	}
+	return namespace
+}
+
+func fullKind(jsonObj *jsonObj.JsonObject) string {
+	kind, _ := jsonObj.GetString("kind")
+	apiVersion, _ := jsonObj.GetString("apiVersion")
+	index := strings.Index(apiVersion, "/")
+	if index == -1 {
+		return kind
+	}
+	return apiVersion[0:index] + "." + kind
+}
+
+func name(jsonObj *jsonObj.JsonObject) string {
+	name, _ := jsonObj.GetJsonObject("metadata").GetString("name")
+	return name
+}
+
+func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	return url
+}
+
+func (client *KubernetesClient) getResponse(fullKind string, namespace string) string {
+	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	return url
 }
 
 func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, error) {
@@ -130,137 +166,177 @@ func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, er
 	return kind, nil
 }
 
+
 /************************************************************
  *
  *      Core
  *
  *************************************************************/
 
-func (client *KubernetesClient) CreateResource(jsonStr string) (*util.ObjectNode, error) {
-	var jsonObj = make(map[string]interface{})
-	json.Unmarshal([]byte(jsonStr), &jsonObj)
-	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
-	namespace := ""
-	if _, ok := jsonObj["metadata"].(map[string]interface{})["namespace"]; ok {
-		namespace = jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+func (client *KubernetesClient) CreateResource(jsonStr string) (*jsonObj.JsonObject, error) {
+
+	inputJson, err := jsonObj.ParseObject(jsonStr)
+	if err != nil {
+		return nil, err
 	}
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind]
+
+	url := client.baseUrl(fullKind(inputJson), namespace(inputJson))
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(jsonStr))
 	value, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
-	return util.NewObjectNodeWithValue(value), nil
+
+	outputJson, err := jsonObj.ParseObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputJson, nil
 }
 
-func (client *KubernetesClient) UpdateResource(jsonStr string) (*util.ObjectNode, error) {
-	var jsonObj = make(map[string]interface{})
-	json.Unmarshal([]byte(jsonStr), &jsonObj)
-	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
-	namespace := ""
-	if _, ok := jsonObj["metadata"].(map[string]interface{})["namespace"]; ok {
-		namespace = jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
+func (client *KubernetesClient) UpdateResource(jsonStr string) (*jsonObj.JsonObject, error) {
+
+	inputJson, err := jsonObj.ParseObject(jsonStr)
+	if err != nil {
+		return nil, err
 	}
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + jsonObj["metadata"].(map[string]interface{})["name"].(string)
+
+	url := client.baseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson)
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
 	value, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
-	return util.NewObjectNodeWithValue(value), nil
-}
 
-func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (*util.ObjectNode, error) {
-
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
-
+	outputJson, err := jsonObj.ParseObject(value)
 	if err != nil {
 		return nil, err
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
+	return outputJson, nil
+}
+
+func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (*jsonObj.JsonObject, error) {
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.baseUrl(fullKind, namespace)  + "/" + name
 	req, _ := client.CreateRequest("DELETE", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
-	return util.NewObjectNodeWithValue(value), nil
-}
 
-func (client *KubernetesClient) GetResource(kind string, namespace string, name string) (*util.ObjectNode, error) {
-
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
-
+	outputJson, err := jsonObj.ParseObject(value)
 	if err != nil {
 		return nil, err
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
+	return outputJson, nil
+}
+
+func (client *KubernetesClient) GetResource(kind string, namespace string, name string) (*jsonObj.JsonObject, error) {
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.baseUrl(fullKind, namespace)  + "/" + name
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
-	return util.NewObjectNodeWithValue(value), nil
-}
 
-func (client *KubernetesClient) ListResources(kind string, namespace string) (*util.ObjectNode, error) {
-
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
-
+	outputJson, err := jsonObj.ParseObject(value)
 	if err != nil {
 		return nil, err
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	return outputJson, nil
+}
+
+func (client *KubernetesClient) ListResources(kind string, namespace string) (*jsonObj.JsonObject, error) {
+
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.baseUrl(fullKind, namespace)
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
-	return util.NewObjectNodeWithValue(value), nil
+
+	outputJson, err := jsonObj.ParseObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputJson, nil
 }
 
-func (client *KubernetesClient) BindResources(pod *util.ObjectNode, host string) (*util.ObjectNode, error) {
-	var jsonObj = make(map[string]interface{})
-	jsonObj["apiVersion"] = "v1"
-	jsonObj["kind"] = "Binding"
+func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*jsonObj.JsonObject, error) {
+	inputJson, err := jsonObj.ParseObject(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+
+	url := client.baseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson) + "/status"
+	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
+
+	outputJson, err := jsonObj.ParseObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputJson, nil
+}
+
+func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host string) (*jsonObj.JsonObject, error) {
+	var podJson = make(map[string]interface{})
+	podJson["apiVersion"] = "v1"
+	podJson["kind"] = "Binding"
 
 	var meta = make(map[string]interface{})
-	meta["name"] = pod.GetObjectNode("metadata").GetString("name")
-	meta["namespace"] = pod.GetObjectNode("metadata").GetString("namespace")
-	jsonObj["metadata"] = meta
+	meta["name"], _ = pod.GetJsonObject("metadata").GetString("name")
+	meta["namespace"], _ = pod.GetJsonObject("metadata").GetString("namespace")
+	podJson["metadata"] = meta
 
 	var target = make(map[string]interface{})
 	target["apiVersion"] = "v1"
 	target["kind"] = "Node"
 	target["name"] = host
-	jsonObj["target"] = target
+	podJson["target"] = target
 
-	kind := getRealKind(pod.GetString("kind"), pod.GetString("apiVersion"))
-	namespace := pod.GetObjectNode("metadata").GetString("namespace")
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind] + "/"
-	url += pod.GetObjectNode("metadata").GetString("name") + "/binding"
+	fullKind := fullKind(pod)
+	namespace := namespace(pod)
+	url := client.baseUrl(fullKind, namespace) + "/" + name(pod) + "/binding"
 
-	jsonBytes, _ := json.Marshal(jsonObj)
+	jsonBytes, _ := json.Marshal(podJson)
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(string(jsonBytes)))
 	value, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
-	return util.NewObjectNodeWithValue(value), nil
+
+	outputJson, err := jsonObj.ParseObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputJson, nil
 }
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher) {
@@ -273,7 +349,7 @@ func (client *KubernetesClient) WatchResource(kind string, namespace string, nam
 	}
 
 	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/watch/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
 	watcher.Watching(url)
 }
@@ -288,29 +364,9 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	}
 
 	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/watch/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
+	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
 	url += client.Analyzer.FullKindToNameMapper[fullKind]
 	watcher.Watching(url)
-}
-
-func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*util.ObjectNode, error) {
-	var jsonObj = make(map[string]interface{})
-	json.Unmarshal([]byte(jsonStr), &jsonObj)
-	kind := getRealKind(jsonObj["kind"].(string), jsonObj["apiVersion"].(string))
-	namespace := ""
-	if _, ok := jsonObj["metadata"].(map[string]interface{})["namespace"]; ok {
-		namespace = jsonObj["metadata"].(map[string]interface{})["namespace"].(string)
-	}
-	url := client.Analyzer.FullKindToApiPrefixMapper[kind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[kind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[kind] + "/" + jsonObj["metadata"].(map[string]interface{})["name"].(string)
-	url += "/status"
-	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
-	value, err := client.RequestResource(req)
-	if err != nil {
-		return nil, err
-	}
-	return util.NewObjectNodeWithValue(value), nil
 }
 
 /************************************************************
@@ -319,7 +375,7 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*util.Obje
  *
  *************************************************************/
 
-func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*util.ObjectNode, error) {
+func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*jsonObj.JsonObject, error) {
 	jsonStr, err := json.Marshal(obj)
 	if err != nil {
 		fmt.Println(err)
@@ -328,7 +384,7 @@ func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*util.Obj
 	return client.CreateResource(string(jsonStr))
 }
 
-func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*util.ObjectNode, error) {
+func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*jsonObj.JsonObject, error) {
 	jsonStr, err := json.Marshal(obj)
 	if err != nil {
 		fmt.Println(err)
@@ -342,24 +398,31 @@ func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*util.Obj
  *      With Label Filter
  *
  *************************************************************/
-func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) (*util.ObjectNode, error) {
+func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) (*jsonObj.JsonObject, error) {
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
-
 	if err != nil {
 		return nil, err
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind]
-	url += "?labelSelector="
+	url := client.baseUrl(fullKind, namespace) + "?labelSelector="
 	for key, value := range labels {
 		url += key + "%3D" + value + ","
 	}
 	url = url[:len(url)-1]
+
+
 	req, _ := client.CreateRequest("GET", url, nil)
-	value, _ := client.RequestResource(req)
-	return util.NewObjectNodeWithValue(value), nil
+	value, err := client.RequestResource(req)
+    if err != nil {
+    	return nil, err
+	}
+
+	outputJson, err := jsonObj.ParseObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputJson, nil
 }
 
 /************************************************************
@@ -367,22 +430,28 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
  *      With Field Filter
  *
  *************************************************************/
-func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) (*util.ObjectNode, error) {
+func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) (*jsonObj.JsonObject, error) {
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
-
 	if err != nil {
 		return nil, err
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += getNamespace(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind]
-	url += "?fieldSelector="
+	url := client.baseUrl(fullKind, namespace) + "?fieldSelector="
 	for key, value := range fields {
 		url += key + "%3D" + value + ","
 	}
 	url = url[:len(url)-1]
+
 	req, _ := client.CreateRequest("GET", url, nil)
-	value, _ := client.RequestResource(req)
-	return util.NewObjectNodeWithValue(value), nil
+	value, err := client.RequestResource(req)
+	if err != nil {
+		return nil, err
+	}
+
+	outputJson, err := jsonObj.ParseObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputJson, nil
 }
