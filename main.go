@@ -15,8 +15,8 @@ func main() {
 	client.Init()
 
 	//createResource(client)
-	//getResource(client)
-	updateResource(client)
+	getResource(client)
+	//updateResource(client)
 	//deleteResource(client)
 	//listResources(client)
 
@@ -35,25 +35,29 @@ func watchResources(client *kubesys.KubernetesClient) {
 }
 
 func createResource(client *kubesys.KubernetesClient) {
-	json, err := client.CreateResource(createPod())
+	jsonRes, err := client.CreateResource(createPod())
 	if err != nil {
 		fmt.Println(err)
 	}
+	json := kubesys.ToJsonObject(jsonRes)
 	fmt.Println(json.ToString())
 }
 
 func deleteResource(client *kubesys.KubernetesClient) {
-	json, _ := client.DeleteResource("Pod", "default", "busybox")
+	jsonRes, _ := client.DeleteResource("Pod", "default", "busybox")
+	json := kubesys.ToJsonObject(jsonRes)
 	fmt.Println(json.ToString())
 }
 
 func getResource(client *kubesys.KubernetesClient) {
-	json, _ := client.GetResource("Pod", "default", "busybox")
+	jsonRes, _ := client.GetResource("Pod", "default", "busybox")
+	json := kubesys.ToJsonObject(jsonRes)
 	fmt.Println(json.ToString())
 }
 
 func listResources(client *kubesys.KubernetesClient) {
-	json,_ := client.ListResources("Deployment", "")
+	jsonRes,_ := client.ListResources("Deployment", "")
+	json := kubesys.ToJsonObject(jsonRes)
 	fmt.Println(json.ToString())
 }
 
@@ -66,7 +70,8 @@ func updateResource(client *kubesys.KubernetesClient) {
 	labels := make(map[string]interface{})
 	labels["test"] = "test"
 
-	obj, _  := client.GetResource("Pod", "default", "busybox")
+	objRes, _  := client.GetResource("Pod", "default", "busybox")
+	obj := kubesys.ToJsonObject(objRes)
 	metadata := obj.GetJsonObject("metadata")
 	metadata.Put("labels", labels)
 	fmt.Println(metadata.ToString())
@@ -74,11 +79,11 @@ func updateResource(client *kubesys.KubernetesClient) {
 	obj.Put("metadata", metadata.ToInterface())
 	fmt.Println(obj.ToString())
 
-	json,err := client.UpdateResource(obj.ToString())
+	jsonRes,err := client.UpdateResource(obj.ToString())
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(json.ToString())
+	fmt.Println(kubesys.ToJsonObject(jsonRes).ToString())
 }
 
 type PrintWatchHandler struct {}
@@ -95,3 +100,4 @@ func (p PrintWatchHandler) DoDeleted(obj map[string]interface{}) {
 	json,_ :=json.Marshal(obj)
 	fmt.Println("DELETED: " + string(json))
 }
+

@@ -62,21 +62,19 @@ func (client *KubernetesClient) Init() {
  *      Common
  *
  *************************************************************/
-func (client *KubernetesClient) RequestResource(request *http.Request) (string, error) {
+func (client *KubernetesClient) RequestResource(request *http.Request) ([]byte, error) {
 	res, err := client.Http.Do(request)
 	if res.StatusCode != http.StatusOK {
-		return "", errors.New("request status " + res.Status)
+		return nil, errors.New("request status " + res.Status + ": " + err.Error())
 	}
-	if err != nil {
-		return "", err
-	}
+
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(body), nil
+	return body, nil
 }
 
 func (client *KubernetesClient) CreateRequest(method, url string, body io.Reader) (*http.Request, error) {
@@ -99,15 +97,6 @@ func isNamespaced(supportNS bool, value string) string {
 		return "namespaces/" + value + "/"
 	}
 	return ""
-}
-
-// deprecated
-func getRealKind(kind string, apiVersion string) string {
-	index := strings.Index(apiVersion, "/")
-	if index == -1 {
-		return kind
-	}
-	return apiVersion[0:index] + "." + kind
 }
 
 func namespace(jsonObj *jsonObj.JsonObject) string {
@@ -173,7 +162,7 @@ func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, er
  *
  *************************************************************/
 
-func (client *KubernetesClient) CreateResource(jsonStr string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) CreateResource(jsonStr string) ([]byte, error) {
 
 	inputJson, err := jsonObj.ParseObject(jsonStr)
 	if err != nil {
@@ -187,10 +176,10 @@ func (client *KubernetesClient) CreateResource(jsonStr string) (*jsonObj.JsonObj
 		return nil, err
 	}
 
-	return inputJson, nil
+	return []byte(jsonStr), nil
 }
 
-func (client *KubernetesClient) UpdateResource(jsonStr string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 
 	inputJson, err := jsonObj.ParseObject(jsonStr)
 	if err != nil {
@@ -204,15 +193,10 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) (*jsonObj.JsonObj
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
-func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) ([]byte, error) {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 	if err != nil {
@@ -226,15 +210,10 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
-func (client *KubernetesClient) GetResource(kind string, namespace string, name string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) GetResource(kind string, namespace string, name string) ([]byte, error) {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 	if err != nil {
@@ -248,15 +227,10 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
-func (client *KubernetesClient) ListResources(kind string, namespace string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) ListResources(kind string, namespace string) ([]byte, error) {
 
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 	if err != nil {
@@ -270,15 +244,10 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) (*j
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
-func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) ([]byte, error) {
 	inputJson, err := jsonObj.ParseObject(jsonStr)
 	if err != nil {
 		return nil, err
@@ -291,15 +260,10 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) (*jsonObj.J
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
-func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host string) ([]byte, error) {
 	var podJson = make(map[string]interface{})
 	podJson["apiVersion"] = "v1"
 	podJson["kind"] = "Binding"
@@ -326,12 +290,7 @@ func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host stri
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher) {
@@ -364,35 +323,13 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	watcher.Watching(url)
 }
 
-/************************************************************
- *
- *      Core for Object
- *
- *************************************************************/
-
-func (client *KubernetesClient) CreateResourceObject(obj interface{}) (*jsonObj.JsonObject, error) {
-	jsonStr, err := json.Marshal(obj)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	return client.CreateResource(string(jsonStr))
-}
-
-func (client *KubernetesClient) UpdateResourceObject(obj interface{}) (*jsonObj.JsonObject, error) {
-	jsonStr, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
-	}
-	return client.UpdateResource(string(jsonStr))
-}
 
 /************************************************************
  *
  *      With Label Filter
  *
  *************************************************************/
-func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) ([]byte, error) {
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
@@ -411,12 +348,7 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
     	return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
 
 /************************************************************
@@ -424,7 +356,7 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
  *      With Field Filter
  *
  *************************************************************/
-func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) (*jsonObj.JsonObject, error) {
+func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) ([]byte, error) {
 	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
@@ -442,10 +374,5 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 		return nil, err
 	}
 
-	outputJson, err := jsonObj.ParseObject(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return outputJson, nil
+	return value, nil
 }
