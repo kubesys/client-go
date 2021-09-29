@@ -3,7 +3,10 @@
  */
 package kubesys
 
-import jsonObj "github.com/kubesys/kubernetes-client-go/pkg/json"
+import (
+	"encoding/json"
+	jsonObj "github.com/kubesys/kubernetes-client-go/pkg/json"
+)
 
 /**
  *      author: wuheng@iscas.ac.cn
@@ -15,4 +18,10 @@ func ToJsonObject(bytes []byte) *jsonObj.JsonObject {
 		return nil
 	}
 	return json
+}
+
+func ToGolangMap(bytes []byte) map[string]interface{} {
+	values := make(map[string]interface{})
+	json.Unmarshal([]byte(bytes), &values)
+	return values
 }

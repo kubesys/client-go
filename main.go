@@ -15,12 +15,12 @@ func main() {
 	client.Init()
 
 	//createResource(client)
-	getResource(client)
+	//getResource(client)
 	//updateResource(client)
 	//deleteResource(client)
 	//listResources(client)
 
-	//watchResources(client)
+	watchResources(client)
 	//watchResource(client)
 }
 
@@ -51,8 +51,8 @@ func deleteResource(client *kubesys.KubernetesClient) {
 
 func getResource(client *kubesys.KubernetesClient) {
 	jsonRes, _ := client.GetResource("Pod", "default", "busybox")
-	json := kubesys.ToJsonObject(jsonRes)
-	fmt.Println(json.ToString())
+	//fmt.Println(kubesys.ToJsonObject(jsonRes))
+	fmt.Println(kubesys.ToGolangMap(jsonRes)["metadata"].(map[string]interface {})["name"].(string))
 }
 
 func listResources(client *kubesys.KubernetesClient) {
