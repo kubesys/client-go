@@ -3,17 +3,11 @@
 We expect to provide a go client:
 - **Flexibility**. It can support all Kubernetes-based systems with minimized extra development, such as [Openshift](https://www.redhat.com/en/technologies/cloud-computing/openshift), [istio](https://istio.io/), etc.
 - **Usability**. Developers just need to learn to write json/yaml(kubernetes native style) from [Kubernetes documentation](https://kubernetes.io/docs/home/).
-- **Integration**. It can work with the other Kubernetes clients, such as [fabric8](https://github.com/fabric8io/kubernetes-client), [official](https://github.com/kubernetes-client/java/).
-
-This project is based on the following softwares.
-
-|               NAME            |   Website                       |      LICENSE              | 
-|-------------------------------|---------------------------------|---------------------------|
-|     GoJson      |  https://github.com/ChimeraCoder/gojson |  GNU GPLv3 |
+- **Integration**. It can work with the other Kubernetes clients, such as  [official](https://github.com/kubernetes-client/go).
 
 ## Comparison
 
-|                           | [official](https://github.com/kubernetes-client/go) | [cdk8s](https://cdk8s.io/) | [this project](https://github.com/kubesys/kubernetes-client)  | 
+|                           | [official](https://github.com/kubernetes-client/go) | [cdk8s](https://cdk8s.io/) | [this project](https://github.com/kubesys/kubernetes-client-go)  | 
 |---------------------------|------------------|------------------|-------------------|
 |        Compatibility                      | for kubernetes-native kinds    | for crd kinds                 |  for both |
 |  Support customized Kubernetes resources  |  a lot of development          | a lot of development          |  zero-deployment     |
