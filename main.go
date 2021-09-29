@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/kubesys/kubernetes-client-go/pkg/kubesys"
 )
@@ -15,25 +16,23 @@ func main() {
 
 	//createResource(client)
 	//getResource(client)
-	updateResource(client)
+	//updateResource(client)
 	//deleteResource(client)
 	//listResources(client)
 
 	//watchResources(client)
-	//watchResource(client)
-	//json, _ := client.GetResource("Pod", "default", "busybox")
-	//fmt.Println(json.GetObjectNode("metadata").GetString("name"))
+	watchResource(client)
 }
 
-//func watchResource(client *KubernetesClient) {
-//	watcher := NewKubernetesWatcher(client)
-//	client.WatchResource("Pod", "default", "busybox", watcher)
-//}
-//
-//func watchResources(client *KubernetesClient) {
-//	watcher := NewKubernetesWatcher(client)
-//	client.WatchResources("Pod", "", watcher)
-//}
+func watchResource(client *kubesys.KubernetesClient) {
+	watcher := kubesys.NewKubernetesWatcher(client, PrintWatchHandler{})
+	client.WatchResource("Pod", "default", "busybox", watcher)
+}
+
+func watchResources(client *kubesys.KubernetesClient) {
+	watcher := kubesys.NewKubernetesWatcher(client, PrintWatchHandler{})
+	client.WatchResources("Pod", "", watcher)
+}
 
 func createResource(client *kubesys.KubernetesClient) {
 	json, err := client.CreateResource(createPod())
@@ -70,7 +69,6 @@ func updateResource(client *kubesys.KubernetesClient) {
 	obj, _  := client.GetResource("Pod", "default", "busybox")
 	metadata := obj.GetJsonObject("metadata")
 	metadata.Put("labels", labels)
-	obj.Put("metadata", metadata)
 	fmt.Println(obj.ToString())
 
 	json,err := client.UpdateResource(obj.ToString())
@@ -78,4 +76,19 @@ func updateResource(client *kubesys.KubernetesClient) {
 		fmt.Println(err)
 	}
 	fmt.Println(json.ToString())
+}
+
+type PrintWatchHandler struct {}
+
+func (p PrintWatchHandler) DoAdded(obj map[string]interface{}) {
+	json,_ :=json.Marshal(obj)
+	fmt.Println("ADDED: " + string(json))
+}
+func (p PrintWatchHandler) DoModified(obj map[string]interface{}) {
+	json,_ :=json.Marshal(obj)
+	fmt.Println("MODIFIED: " + string(json))
+}
+func (p PrintWatchHandler) DoDeleted(obj map[string]interface{}) {
+	json,_ :=json.Marshal(obj)
+	fmt.Println("DELETED: " + string(json))
 }
