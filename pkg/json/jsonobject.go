@@ -3,7 +3,10 @@
  */
 package json
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 /**
  *  https://studygolang.com/articles/12884
@@ -148,9 +151,14 @@ func (j *JsonObject) GetNullBoolean(key string) (*Boolean, error) {
 
 func (j *JsonObject) Put(key string, val interface {}) {
 	j.m[key] = &Value{val}
+	fmt.Println("tt: " + j.ToString())
 }
 
 func (j *JsonObject) ToString() string {
 	data, _ := json.Marshal(j.m)
 	return string(data)
+}
+
+func (j *JsonObject) ToInterface() interface {} {
+	return j.m
 }
