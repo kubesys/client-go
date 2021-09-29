@@ -4,6 +4,7 @@
 package kubesys
 
 import (
+	"encoding/json"
 	"strings"
 )
 
@@ -41,15 +42,20 @@ func NewKubernetesAnalyzer() *KubernetesAnalyzer {
 
 func (analyzer *KubernetesAnalyzer) Learning(client KubernetesClient) {
 	registryRequest, _ := client.CreateRequest("GET", client.Url, nil)
-	registryValues, _ := client.RequestResource(registryRequest)
+	registryStringValues, _ := client.RequestResource(registryRequest)
 
-	// fmt.Println(registryRequest)
+	registryValues := make(map[string]interface{})
+	json.Unmarshal([]byte(registryStringValues), &registryValues)
 
 	for _, v := range registryValues["paths"].([]interface{}) {
 		path := v.(string)
 		if strings.HasPrefix(path, "/api") && (len(strings.Split(path, "/")) == 4 || strings.EqualFold(path, "/api/v1")) {
 			resourceRequest, _ := client.CreateRequest("GET", client.Url+path, nil)
-			resourceValues, _ := client.RequestResource(resourceRequest)
+			resourceStringValues, _ := client.RequestResource(resourceRequest)
+
+			resourceValues := make(map[string]interface{})
+			json.Unmarshal([]byte(resourceStringValues), &resourceValues)
+
 			apiVersion := resourceValues["groupVersion"].(string)
 			for _, w := range resourceValues["resources"].([]interface{}) {
 				resourceValue := w.(map[string]interface{})
