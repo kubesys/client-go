@@ -23,7 +23,7 @@ type KubernetesClient struct {
 	Url      string
 	Token    string
 	Http     *http.Client
-	Analyzer *KubernetesAnalyzer
+	Analyzer *RuleBase
 }
 
 /************************************************************
@@ -42,7 +42,7 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 	return client
 }
 
-func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
+func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *RuleBase) *KubernetesClient {
 	client := new(KubernetesClient)
 	client.Url = url
 	client.Token = token
