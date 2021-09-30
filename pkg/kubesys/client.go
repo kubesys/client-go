@@ -283,7 +283,7 @@ func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host stri
 
 	fullKind := fullKind(pod)
 	namespace := namespace(pod)
-	url := client.BaseUrl(fullKind, namespace) + "/" + name(pod) + "/binding"
+	url := client.BindingResourceStatusUrl(fullKind, namespace, name(pod))
 
 	jsonBytes, _ := json.Marshal(podJson)
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(string(jsonBytes)))
@@ -339,7 +339,7 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 		return nil, err
 	}
 
-	url := client.BaseUrl(fullKind, namespace) + "?labelSelector="
+	url := client.ListResourcesUrl(fullKind, namespace) + "?labelSelector="
 	for key, value := range labels {
 		url += key + "%3D" + value + ","
 	}
@@ -366,7 +366,7 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 		return nil, err
 	}
 
-	url := client.BaseUrl(fullKind, namespace) + "?fieldSelector="
+	url := client.ListResourcesUrl(fullKind, namespace) + "?fieldSelector="
 	for key, value := range fields {
 		url += key + "%3D" + value + ","
 	}
