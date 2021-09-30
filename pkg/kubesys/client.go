@@ -117,6 +117,14 @@ func fullKind(jsonObj *jsonObj.JsonObject) string {
 	return apiVersion[0:index] + "." + kind
 }
 
+func kind(fullKind string) string {
+	index := strings.LastIndex(fullKind, ".")
+	if index == -1 {
+		return fullKind
+	}
+	return fullKind[index+1:]
+}
+
 func name(jsonObj *jsonObj.JsonObject) string {
 	name, _ := jsonObj.GetJsonObject("metadata").GetString("name")
 	return name
@@ -403,4 +411,18 @@ func (client *KubernetesClient) GetFullKinds() []string {
 		i++
 	}
 	return array
+}
+
+func (client *KubernetesClient) GetKindDesc() []byte {
+	var desc = make(map[string]interface{})
+	for fullKind, _ := range client.Analyzer.FullKindToNameMapper {
+		var value = make(map[string]interface{})
+		value["apiVersion"] = client.Analyzer.FullKindToVersionMapper[fullKind]
+		value["kind"] = kind(fullKind)
+		value["plural"] = client.Analyzer.FullKindToNameMapper[fullKind]
+		value["verbs"] = client.Analyzer.FullKindToVerbsMapper[fullKind]
+		desc[fullKind] = value
+	}
+	bytes, _ := json.Marshal(desc)
+	return bytes
 }

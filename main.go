@@ -23,7 +23,8 @@ func main() {
 	//watchResources(client)
 	//watchResource(client)
 	//fmt.Println(client.GetKinds())
-	fmt.Println(client.GetFullKinds())
+	//fmt.Println(client.GetFullKinds())
+	fmt.Println(kubesys.ToJsonObject(client.GetKindDesc()).ToString())
 }
 
 func watchResource(client *kubesys.KubernetesClient) {
