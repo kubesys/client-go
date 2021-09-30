@@ -222,7 +222,7 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 		return nil, err
 	}
 
-	url := client.BaseUrl(fullKind, namespace)  + "/" + name
+	url := client.GetResourceUrl(fullKind, namespace, name)
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
