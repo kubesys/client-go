@@ -205,7 +205,7 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 		return nil, err
 	}
 
-	url := client.BaseUrl(fullKind, namespace)  + "/" + name
+	url := client.DeleteResourceUrl(fullKind, namespace, name)
 	req, _ := client.CreateRequest("DELETE", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {

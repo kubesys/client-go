@@ -23,4 +23,8 @@ func (client *KubernetesClient) UpdateResourceUrl(fullKind string, namespace str
 	return client.baseUrl(fullKind, namespace) + "/" + name
 }
 
+func (client *KubernetesClient) DeleteResourceUrl(fullKind string, namespace string, name string) string {
+	return client.baseUrl(fullKind, namespace) + "/" + name
+}
+
 
