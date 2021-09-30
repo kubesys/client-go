@@ -12,6 +12,7 @@ import (
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/9/29
  */
+
 const (
 	JSONOBJECTTYPE = "JsonObject"
 	JSONARRAYTYPE  = "JsonArray"
