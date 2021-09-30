@@ -23,7 +23,7 @@ type KubernetesClient struct {
 	Url      string
 	Token    string
 	Http     *http.Client
-	Analyzer *RuleBase
+	Analyzer *KubernetesAnalyzer
 }
 
 /************************************************************
@@ -42,7 +42,7 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 	return client
 }
 
-func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *RuleBase) *KubernetesClient {
+func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
 	client := new(KubernetesClient)
 	client.Url = url
 	client.Token = token
@@ -131,16 +131,16 @@ func name(jsonObj *jsonObj.JsonObject) string {
 }
 
 func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
 	return url
 }
 
 func (client *KubernetesClient) getResponse(fullKind string, namespace string) string {
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
 	return url
 }
 
@@ -206,7 +206,7 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 
 func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) ([]byte, error) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 
 func (client *KubernetesClient) GetResource(kind string, namespace string, name string) ([]byte, error) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 
 func (client *KubernetesClient) ListResources(kind string, namespace string) ([]byte, error) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -303,31 +303,31 @@ func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host stri
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/watch/"
-	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind] + "/" + name
+	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
+	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind] + "/" + name
 	watcher.Watching(url)
 }
 
 func (client *KubernetesClient) WatchResources(kind string, namespace string, watcher *KubernetesWatcher) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	url := client.Analyzer.FullKindToApiPrefixMapper[fullKind] + "/watch/"
-	url += isNamespaced(client.Analyzer.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.FullKindToNameMapper[fullKind]
+	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
+	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
 	watcher.Watching(url)
 }
 
@@ -338,7 +338,7 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
  *
  *************************************************************/
 func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) ([]byte, error) {
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +365,7 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
  *
  *************************************************************/
 func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) ([]byte, error) {
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +393,7 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 
 func (client *KubernetesClient) GetKinds() []string {
 	i := 0
-	mapper := client.Analyzer.KindToFullKindMapper
+	mapper := client.Analyzer.RuleBase.KindToFullKindMapper
 	array := make([]string, len(mapper))
 	for key, _ := range mapper {
 		array[i] = key
@@ -404,7 +404,7 @@ func (client *KubernetesClient) GetKinds() []string {
 
 func (client *KubernetesClient) GetFullKinds() []string {
 	i := 0
-	mapper := client.Analyzer.FullKindToNameMapper
+	mapper := client.Analyzer.RuleBase.FullKindToNameMapper
 	array := make([]string, len(mapper))
 	for key, _ := range mapper {
 		array[i] = key
@@ -415,12 +415,12 @@ func (client *KubernetesClient) GetFullKinds() []string {
 
 func (client *KubernetesClient) GetKindDesc() []byte {
 	var desc = make(map[string]interface{})
-	for fullKind, _ := range client.Analyzer.FullKindToNameMapper {
+	for fullKind, _ := range client.Analyzer.RuleBase.FullKindToNameMapper {
 		var value = make(map[string]interface{})
-		value["apiVersion"] = client.Analyzer.FullKindToVersionMapper[fullKind]
+		value["apiVersion"] = client.Analyzer.RuleBase.FullKindToVersionMapper[fullKind]
 		value["kind"] = kind(fullKind)
-		value["plural"] = client.Analyzer.FullKindToNameMapper[fullKind]
-		value["verbs"] = client.Analyzer.FullKindToVerbsMapper[fullKind]
+		value["plural"] = client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
+		value["verbs"] = client.Analyzer.RuleBase.FullKindToVerbsMapper[fullKind]
 		desc[fullKind] = value
 	}
 	bytes, _ := json.Marshal(desc)

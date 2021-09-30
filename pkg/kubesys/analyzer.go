@@ -11,6 +11,33 @@ import (
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
  */
+type KubernetesAnalyzer struct {
+	RuleBase     *RuleBase
+}
+
+func NewKubernetesAnalyzer() *KubernetesAnalyzer {
+	ruleBase := new(RuleBase)
+
+	ruleBase.KindToFullKindMapper = make(map[string][]string)
+	ruleBase.FullKindToApiPrefixMapper = make(map[string]string)
+
+	ruleBase.FullKindToNameMapper = make(map[string]string)
+	ruleBase.FullKindToNamespaceMapper = make(map[string]bool)
+
+	ruleBase.FullKindToVersionMapper = make(map[string]string)
+	ruleBase.FullKindToGroupMapper = make(map[string]string)
+	ruleBase.FullKindToVerbsMapper = make(map[string]interface{})
+
+	analyzer := new(KubernetesAnalyzer)
+	analyzer.RuleBase = ruleBase
+
+	return analyzer
+}
+
+func (analyzer *KubernetesAnalyzer) Learning(client KubernetesClient) {
+	extract(client, analyzer.RuleBase)
+}
+
 func getGroup(apiVersion string) string {
 	index := strings.LastIndex(apiVersion, "/")
 	if index > 0 {
