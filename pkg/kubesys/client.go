@@ -131,16 +131,18 @@ func name(jsonObj *jsonObj.JsonObject) string {
 }
 
 func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
-	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
+	ruleBase := client.Analyzer.RuleBase
+	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += ruleBase.FullKindToNameMapper[fullKind]
 	return url
 }
 
 func (client *KubernetesClient) getResponse(fullKind string, namespace string) string {
-	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
+	ruleBase := client.Analyzer.RuleBase
+	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
+	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += ruleBase.FullKindToNameMapper[fullKind]
 	return url
 }
 
@@ -303,31 +305,33 @@ func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host stri
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	ruleBase := client.Analyzer.RuleBase
+	fullKind, err := checkAndReturnRealKind(kind, ruleBase.KindToFullKindMapper)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
-	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind] + "/" + name
+	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
+	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += ruleBase.FullKindToNameMapper[fullKind] + "/" + name
 	watcher.Watching(url)
 }
 
 func (client *KubernetesClient) WatchResources(kind string, namespace string, watcher *KubernetesWatcher) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	ruleBase := client.Analyzer.RuleBase
+	fullKind, err := checkAndReturnRealKind(kind, ruleBase.KindToFullKindMapper)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	url := client.Analyzer.RuleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
-	url += isNamespaced(client.Analyzer.RuleBase.FullKindToNamespaceMapper[fullKind], namespace)
-	url += client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
+	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
+	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += ruleBase.FullKindToNameMapper[fullKind]
 	watcher.Watching(url)
 }
 
@@ -415,12 +419,14 @@ func (client *KubernetesClient) GetFullKinds() []string {
 
 func (client *KubernetesClient) GetKindDesc() []byte {
 	var desc = make(map[string]interface{})
-	for fullKind, _ := range client.Analyzer.RuleBase.FullKindToNameMapper {
+
+	ruleBase := client.Analyzer.RuleBase
+	for fullKind, _ := range ruleBase.FullKindToNameMapper {
 		var value = make(map[string]interface{})
-		value["apiVersion"] = client.Analyzer.RuleBase.FullKindToVersionMapper[fullKind]
+		value["apiVersion"] = ruleBase.FullKindToVersionMapper[fullKind]
 		value["kind"] = kind(fullKind)
-		value["plural"] = client.Analyzer.RuleBase.FullKindToNameMapper[fullKind]
-		value["verbs"] = client.Analyzer.RuleBase.FullKindToVerbsMapper[fullKind]
+		value["plural"] = ruleBase.FullKindToNameMapper[fullKind]
+		value["verbs"] = ruleBase.FullKindToVerbsMapper[fullKind]
 		desc[fullKind] = value
 	}
 	bytes, _ := json.Marshal(desc)
