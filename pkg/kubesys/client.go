@@ -188,7 +188,7 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	url := client.BaseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson)
+	url := client.UpdateResourceUrl(fullKind(inputJson), namespace(inputJson), name(inputJson))
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
 	value, err := client.RequestResource(req)
 	if err != nil {
