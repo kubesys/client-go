@@ -13,6 +13,7 @@ import (
  */
 type KubernetesAnalyzer struct {
 	RuleBase     *RuleBase
+	Registry     *Registry
 }
 
 func NewKubernetesAnalyzer() *KubernetesAnalyzer {
@@ -28,14 +29,15 @@ func NewKubernetesAnalyzer() *KubernetesAnalyzer {
 	ruleBase.FullKindToGroupMapper = make(map[string]string)
 	ruleBase.FullKindToVerbsMapper = make(map[string]interface{})
 
+
 	analyzer := new(KubernetesAnalyzer)
 	analyzer.RuleBase = ruleBase
-
+	analyzer.Registry = NewRegistry(ruleBase)
 	return analyzer
 }
 
 func (analyzer *KubernetesAnalyzer) Learning(client KubernetesClient) {
-	extract(client, analyzer.RuleBase)
+	extract(client, analyzer.Registry)
 }
 
 func getGroup(apiVersion string) string {
