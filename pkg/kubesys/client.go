@@ -239,7 +239,7 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) ([]
 		return nil, err
 	}
 
-	url := client.BaseUrl(fullKind, namespace)
+	url := client.ListResourcesUrl(fullKind, namespace)
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {

@@ -19,6 +19,10 @@ func (client *KubernetesClient) CreateResourceUrl(fullKind string, namespace str
 	return client.baseUrl(fullKind, namespace)
 }
 
+func (client *KubernetesClient) ListResourcesUrl(fullKind string, namespace string) string {
+	return client.baseUrl(fullKind, namespace)
+}
+
 func (client *KubernetesClient) UpdateResourceUrl(fullKind string, namespace string, name string) string {
 	return client.baseUrl(fullKind, namespace) + "/" + name
 }
@@ -30,5 +34,6 @@ func (client *KubernetesClient) DeleteResourceUrl(fullKind string, namespace str
 func (client *KubernetesClient) GetResourceUrl(fullKind string, namespace string, name string) string {
 	return client.baseUrl(fullKind, namespace) + "/" + name
 }
+
 
 
