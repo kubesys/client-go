@@ -130,14 +130,6 @@ func name(jsonObj *jsonObj.JsonObject) string {
 	return name
 }
 
-func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
-	ruleBase := client.Analyzer.RuleBase
-	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
-	url += ruleBase.FullKindToNameMapper[fullKind]
-	return url
-}
-
 func (client *KubernetesClient) getResponse(fullKind string, namespace string) string {
 	ruleBase := client.Analyzer.RuleBase
 	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
@@ -179,7 +171,7 @@ func (client *KubernetesClient) CreateResource(jsonStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind(inputJson), namespace(inputJson))
+	url := client.CreateResourceUrl(fullKind(inputJson), namespace(inputJson))
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(jsonStr))
 	_, err = client.RequestResource(req)
 	if err != nil {
@@ -196,7 +188,7 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson)
+	url := client.BaseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson)
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
 	value, err := client.RequestResource(req)
 	if err != nil {
@@ -213,7 +205,7 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind, namespace)  + "/" + name
+	url := client.BaseUrl(fullKind, namespace)  + "/" + name
 	req, _ := client.CreateRequest("DELETE", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
@@ -230,7 +222,7 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind, namespace)  + "/" + name
+	url := client.BaseUrl(fullKind, namespace)  + "/" + name
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
@@ -247,7 +239,7 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) ([]
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind, namespace)
+	url := client.BaseUrl(fullKind, namespace)
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
 	if err != nil {
@@ -263,7 +255,7 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) ([]byte, er
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson) + "/status"
+	url := client.BaseUrl(fullKind(inputJson), namespace(inputJson)) + "/" + name(inputJson) + "/status"
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
 	value, err := client.RequestResource(req)
 	if err != nil {
@@ -291,7 +283,7 @@ func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host stri
 
 	fullKind := fullKind(pod)
 	namespace := namespace(pod)
-	url := client.baseUrl(fullKind, namespace) + "/" + name(pod) + "/binding"
+	url := client.BaseUrl(fullKind, namespace) + "/" + name(pod) + "/binding"
 
 	jsonBytes, _ := json.Marshal(podJson)
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(string(jsonBytes)))
@@ -347,7 +339,7 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind, namespace) + "?labelSelector="
+	url := client.BaseUrl(fullKind, namespace) + "?labelSelector="
 	for key, value := range labels {
 		url += key + "%3D" + value + ","
 	}
@@ -374,7 +366,7 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 		return nil, err
 	}
 
-	url := client.baseUrl(fullKind, namespace) + "?fieldSelector="
+	url := client.BaseUrl(fullKind, namespace) + "?fieldSelector="
 	for key, value := range fields {
 		url += key + "%3D" + value + ","
 	}
