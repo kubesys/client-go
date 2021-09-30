@@ -33,7 +33,11 @@ type KubernetesClient struct {
  *************************************************************/
 func NewKubernetesClient(url string, token string) *KubernetesClient {
 	client := new(KubernetesClient)
-	client.Url = url
+	if strings.HasSuffix(url, "/") {
+		client.Url = url[0: len(url) - 1]
+	} else {
+		client.Url = url
+	}
 	client.Token = token
 	client.Http = &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

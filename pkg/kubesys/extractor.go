@@ -22,7 +22,7 @@ func extract(client *KubernetesClient, registry *Registry) {
 	for _, v := range registryValues["paths"].([]interface{}) {
 		path := v.(string)
 		if strings.HasPrefix(path, "/api") && (len(strings.Split(path, "/")) == 4 || strings.EqualFold(path, "/api/v1")) {
-			Register(client, client.Url + path, registry)
+			register(client, client.Url + path, registry)
 		}
 	}
 }

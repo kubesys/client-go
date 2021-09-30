@@ -19,7 +19,7 @@ func NewRegistry(ruleBase *RuleBase) *Registry {
 	return registry
 }
 
-func Register(client *KubernetesClient, url string, registry *Registry) {
+func register(client *KubernetesClient, url string, registry *Registry) {
 
 	resourceRequest, _ := client.CreateRequest("GET", url, nil)
 	resourceStringValues, _ := client.RequestResource(resourceRequest)

@@ -25,7 +25,7 @@ func listen(client *KubernetesClient, registry *Registry) {
 		for j := 0; j < len(vers.Values()); j++ {
 			ver, _ := vers.GetJsonObject(j).GetString("name")
 			url := client.Url + "/apis/" + group + "/" + ver
-			Register(client, url, registry)
+			register(client, url, registry)
 		}
 	}
 }
