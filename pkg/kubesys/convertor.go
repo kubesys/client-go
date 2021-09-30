@@ -35,5 +35,9 @@ func (client *KubernetesClient) GetResourceUrl(fullKind string, namespace string
 	return client.baseUrl(fullKind, namespace) + "/" + name
 }
 
+func (client *KubernetesClient) UpdateResourceStatusUrl(fullKind string, namespace string, name string) string {
+	return client.baseUrl(fullKind, namespace) + "/" + name + "/status"
+}
+
 
 
