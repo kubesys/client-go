@@ -3,6 +3,8 @@
  */
 package kubesys
 
+import "encoding/json"
+
 /**
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
@@ -17,21 +19,31 @@ func NewRegistry(ruleBase *RuleBase) *Registry {
 	return registry
 }
 
-func Register(apiPrefix string, ruleBase *RuleBase, resourceValue map[string]interface{}, apiVersion string) {
+func Register(client *KubernetesClient, url string, registry *Registry) {
 
-	shortKind := resourceValue["kind"].(string)
-	fullKind := getFullKind(resourceValue, shortKind, apiVersion)
+	resourceRequest, _ := client.CreateRequest("GET", url, nil)
+	resourceStringValues, _ := client.RequestResource(resourceRequest)
 
-	if _, ok := ruleBase.FullKindToApiPrefixMapper[fullKind]; !ok {
-		ruleBase.KindToFullKindMapper[shortKind] = append(ruleBase.KindToFullKindMapper[shortKind], fullKind)
-		ruleBase.FullKindToApiPrefixMapper[fullKind] = apiPrefix
+	resourceValues := make(map[string]interface{})
+	json.Unmarshal([]byte(resourceStringValues), &resourceValues)
 
-		ruleBase.FullKindToNameMapper[fullKind] = resourceValue["name"].(string)
-		ruleBase.FullKindToNamespaceMapper[fullKind] = resourceValue["namespaced"].(bool)
+	apiVersion := resourceValues["groupVersion"].(string)
+	for _, w := range resourceValues["resources"].([]interface{}) {
+		resourceValue := w.(map[string]interface{})
+		shortKind := resourceValue["kind"].(string)
+		fullKind := getFullKind(resourceValue, shortKind, apiVersion)
 
-		ruleBase.FullKindToVersionMapper[fullKind] = apiVersion
-		ruleBase.FullKindToGroupMapper[fullKind] = getGroup(apiVersion)
-		ruleBase.FullKindToVerbsMapper[fullKind] = resourceValue["verbs"]
+		if _, ok := registry.RuleBase.FullKindToApiPrefixMapper[fullKind]; !ok {
+			registry.RuleBase.KindToFullKindMapper[shortKind] = append(registry.RuleBase.KindToFullKindMapper[shortKind], fullKind)
+			registry.RuleBase.FullKindToApiPrefixMapper[fullKind] = url
+
+			registry.RuleBase.FullKindToNameMapper[fullKind] = resourceValue["name"].(string)
+			registry.RuleBase.FullKindToNamespaceMapper[fullKind] = resourceValue["namespaced"].(bool)
+
+			registry.RuleBase.FullKindToVersionMapper[fullKind] = apiVersion
+			registry.RuleBase.FullKindToGroupMapper[fullKind] = getGroup(apiVersion)
+			registry.RuleBase.FullKindToVerbsMapper[fullKind] = resourceValue["verbs"]
+		}
 	}
 }
 

@@ -54,7 +54,7 @@ func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *Kuberne
 }
 
 func (client *KubernetesClient) Init() {
-	client.Analyzer.Learning(*client)
+	client.Analyzer.Learning(client)
 }
 
 /************************************************************

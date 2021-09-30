@@ -36,8 +36,9 @@ func NewKubernetesAnalyzer() *KubernetesAnalyzer {
 	return analyzer
 }
 
-func (analyzer *KubernetesAnalyzer) Learning(client KubernetesClient) {
+func (analyzer *KubernetesAnalyzer) Learning(client *KubernetesClient) {
 	extract(client, analyzer.Registry)
+	//listen(client, analyzer.Registry)
 }
 
 func getGroup(apiVersion string) string {

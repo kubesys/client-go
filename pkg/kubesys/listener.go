@@ -11,7 +11,7 @@ import (
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
  */
-func listen(client KubernetesClient, registry *Registry) {
+func listen(client *KubernetesClient, registry *Registry) {
 
 	crds,_ := client.ListResources("CustomResourceDefinition", "")
 
@@ -19,11 +19,13 @@ func listen(client KubernetesClient, registry *Registry) {
 
 	for i := 0; i < len(items.Values()); i++ {
 		item := items.GetJsonObject(i)
+		fmt.Println(item.ToString())
 		group, _ := item.GetJsonObject("spec").GetString("group")
-		vers := item.GetJsonArray("versions")
+		vers := item.GetJsonObject("spec").GetJsonArray("versions")
 		for j := 0; j < len(vers.Values()); j++ {
 			ver, _ := vers.GetJsonObject(j).GetString("name")
-			fmt.Println("/apis/" + group + "/" + ver)
+			url := client.Url + "/apis/" + group + "/" + ver
+			Register(client, url, registry)
 		}
 	}
 }
