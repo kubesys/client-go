@@ -3,6 +3,8 @@
  */
 package json
 
+import "encoding/json"
+
 type JsonArray struct {
 	s []*Value
 }
@@ -11,6 +13,7 @@ type JsonArray struct {
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/9/29
  */
+
 func (j *JsonArray) Get(index int) (*Value, error) {
 	if index >= len(j.s) {
 		return nil, IndexOutOfRangeError
@@ -108,4 +111,9 @@ func (j *JsonArray) GetNullBoolean(index int) (*Boolean, error) {
 		return nil, err
 	}
 	return val.NullBoolean()
+}
+
+func (j *JsonArray) ToString() string {
+	data, _ := json.Marshal(j.s)
+	return string(data)
 }

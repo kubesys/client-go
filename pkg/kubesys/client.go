@@ -376,3 +376,19 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 
 	return value, nil
 }
+
+/************************************************************
+ *
+ *      Metadata
+ *
+ *************************************************************/
+
+func (client *KubernetesClient) GetKinds() []string {
+	i := 0
+	array := make([]string, len(client.Analyzer.KindToFullKindMapper))
+	for key, _ := range client.Analyzer.KindToFullKindMapper {
+		array[i] = key
+		i++
+	}
+	return array
+}

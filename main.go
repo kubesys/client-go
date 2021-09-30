@@ -20,8 +20,9 @@ func main() {
 	//deleteResource(client)
 	//listResources(client)
 
-	watchResources(client)
+	//watchResources(client)
 	//watchResource(client)
+	fmt.Println(client.GetKinds())
 }
 
 func watchResource(client *kubesys.KubernetesClient) {
