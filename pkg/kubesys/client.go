@@ -312,6 +312,7 @@ func (client *KubernetesClient) WatchResource(kind string, namespace string, nam
 	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
 	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
 	url += ruleBase.FullKindToNameMapper[fullKind] + "/" + name
+	url += "/?watch=true&timeoutSeconds=315360000"
 	watcher.Watching(url)
 }
 
@@ -328,6 +329,7 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/watch/"
 	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
 	url += ruleBase.FullKindToNameMapper[fullKind]
+	url += "/?watch=true&timeoutSeconds=315360000"
 	watcher.Watching(url)
 }
 
