@@ -46,6 +46,26 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 	return client
 }
 
+func NewDefaultKubernetesClient() (*KubernetesClient, error) {
+	return NewKubernetesClientWithConfigFile("/etc/kubernetes/admin.conf")
+}
+
+func NewKubernetesClientWithConfigFile(configFileName string) (*KubernetesClient, error) {
+	config, err := NewForConfig(configFileName)
+	if err != nil {
+		return nil, err
+	}
+	client := new(KubernetesClient)
+	client.Url = config.Server
+	httpClient, err := HTTPClientFor(config)
+	if err != nil {
+		return nil, err
+	}
+	client.Http = httpClient
+	client.Analyzer = NewKubernetesAnalyzer()
+	return client, nil
+}
+
 func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
 	client := new(KubernetesClient)
 	client.Url = url
@@ -69,7 +89,11 @@ func (client *KubernetesClient) Init() {
 func (client *KubernetesClient) RequestResource(request *http.Request) ([]byte, error) {
 	res, err := client.Http.Do(request)
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("request status " + res.Status + ": " + err.Error())
+		if err != nil {
+			return nil, errors.New("request status " + res.Status + ": " + err.Error())
+		} else {
+			return nil, errors.New("request status " + res.Status)
+		}
 	}
 
 	defer res.Body.Close()
