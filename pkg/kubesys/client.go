@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	jsonObj "github.com/kubesys/kubernetes-client-go/pkg/json"
+	jsonObj "github.com/kubesys/client-go/pkg/json"
 	"io"
 	"io/ioutil"
 	"net/http"

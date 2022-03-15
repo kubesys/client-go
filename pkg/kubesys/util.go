@@ -5,7 +5,7 @@ package kubesys
 
 import (
 	"encoding/json"
-	jsonObj "github.com/kubesys/kubernetes-client-go/pkg/json"
+	jsonObj "github.com/kubesys/client-go/pkg/json"
 )
 
 /**
