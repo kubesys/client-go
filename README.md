@@ -15,7 +15,7 @@ We expect to provide a go client:
 
 ## Architecture
 
-![avatar](/docs/arch.png)
+![avatar](./docs/arch.png)
  
 ## Installation
 
@@ -40,10 +40,12 @@ git clone --recursive https://github.com/kubesys/client-go
 ### Creating a client
 
 
-The easiest way to create a client is:
+There are two ways to create a client:
+
+- By url and token:
 
 ```go
-KubernetesClient client = new KubernetesClient(url, token);
+client := new KubernetesClient(url, token);
 client.Init()
 ```
 
@@ -54,6 +56,7 @@ Here, the token can be created and get by following commands:
 ```yaml
 kubectl create -f https://raw.githubusercontent.com/kubesys/client-go/master/account.yaml
 ```
+
 2. get token
 
 ```kubectl
@@ -61,6 +64,16 @@ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | gre
 
 ```
 
+- By kubeconfig:
+
+```go
+client, err := kubesys.NewKubernetesClientWithDefaultKubeConfig()
+if err == nil {
+    fmt.Println("Failed to get kubeconfig.")
+    return
+}
+client.Init()
+```
 
 
 ### simple-example

@@ -14,6 +14,13 @@ func main() {
 	client := kubesys.NewKubernetesClient(url, tok)
 	client.Init()
 
+	// client, err := kubesys.NewKubernetesClientWithDefaultKubeConfig()
+	// if err == nil {
+	// 	fmt.Println("Failed to get kubeconfig.")
+	// 	return
+	// }
+	// client.Init()
+
 	//createResource(client)
 	//getResource(client)
 	//updateResource(client)

@@ -12,6 +12,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -34,7 +36,7 @@ type KubernetesClient struct {
 func NewKubernetesClient(url string, token string) *KubernetesClient {
 	client := new(KubernetesClient)
 	if strings.HasSuffix(url, "/") {
-		client.Url = url[0: len(url) - 1]
+		client.Url = url[0 : len(url)-1]
 	} else {
 		client.Url = url
 	}
@@ -46,12 +48,16 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 	return client
 }
 
-func NewDefaultKubernetesClient() (*KubernetesClient, error) {
-	return NewKubernetesClientWithConfigFile("/etc/kubernetes/admin.conf")
+func NewKubernetesClientWithDefaultKubeConfig() (*KubernetesClient, error) {
+	client, err := NewKubernetesClientWithKubeConfig("/etc/kubernetes/admin.conf")
+	if err == nil {
+		return client, err
+	}
+	return NewKubernetesClientWithKubeConfig(filepath.Join(os.Getenv("HOME"), ".kube", "config"))
 }
 
-func NewKubernetesClientWithConfigFile(configFileName string) (*KubernetesClient, error) {
-	config, err := NewForConfig(configFileName)
+func NewKubernetesClientWithKubeConfig(kubeConfig string) (*KubernetesClient, error) {
+	config, err := NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +135,7 @@ func isNamespaced(supportNS bool, value string) string {
 
 func namespace(jsonObj *jsonObj.JsonObject) string {
 	namespace := ""
-	if jsonObj.GetJsonObject("metadata").HasKey("namespace")  {
+	if jsonObj.GetJsonObject("metadata").HasKey("namespace") {
 		namespace, _ = jsonObj.GetJsonObject("metadata").GetString("namespace")
 	}
 	return namespace
@@ -184,7 +190,6 @@ func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, er
 	}
 	return kind, nil
 }
-
 
 /************************************************************
  *
@@ -357,7 +362,6 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
 	watcher.Watching(url)
 }
 
-
 /************************************************************
  *
  *      With Label Filter
@@ -375,11 +379,10 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 	}
 	url = url[:len(url)-1]
 
-
 	req, _ := client.CreateRequest("GET", url, nil)
 	value, err := client.RequestResource(req)
-    if err != nil {
-    	return nil, err
+	if err != nil {
+		return nil, err
 	}
 
 	return value, nil

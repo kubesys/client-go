@@ -25,8 +25,8 @@ type Config struct {
 	CertificateAuthorityData string
 }
 
-func NewForConfig(configFileName string) (*Config, error) {
-	f, err := os.Open(configFileName)
+func NewForConfig(kubeConfig string) (*Config, error) {
+	f, err := os.Open(kubeConfig)
 	if err != nil {
 		f.Close()
 		return nil, err

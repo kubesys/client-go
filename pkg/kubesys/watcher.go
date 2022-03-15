@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 )
 
-
 /**
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
@@ -25,7 +24,6 @@ type KubernetesWatcher struct {
 	handler WatchHandler
 }
 
-
 /************************************************************
  *
  *      initialization
@@ -33,13 +31,14 @@ type KubernetesWatcher struct {
  *************************************************************/
 func NewKubernetesWatcher(client *KubernetesClient, handler WatchHandler) *KubernetesWatcher {
 	return &KubernetesWatcher{
-		Client: client,
+		Client:  client,
 		handler: handler,
 	}
 }
 
 func (watcher *KubernetesWatcher) Watching(url string) {
 	watcherClient := NewKubernetesClientWithAnalyzer(url, watcher.Client.Token, watcher.Client.Analyzer)
+	watcherClient.Http = watcher.Client.Http
 	req, _ := watcherClient.CreateRequest("GET", url, nil)
 	resp, _ := watcherClient.Http.Do(req)
 	reader := bufio.NewReader(resp.Body)
