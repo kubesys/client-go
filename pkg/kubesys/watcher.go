@@ -29,6 +29,7 @@ type KubernetesWatcher struct {
  *      initialization
  *
  *************************************************************/
+
 func NewKubernetesWatcher(client *KubernetesClient, handler WatchHandler) *KubernetesWatcher {
 	return &KubernetesWatcher{
 		Client:  client,
@@ -37,10 +38,10 @@ func NewKubernetesWatcher(client *KubernetesClient, handler WatchHandler) *Kuber
 }
 
 func (watcher *KubernetesWatcher) Watching(url string) {
-	watcherClient := NewKubernetesClientWithAnalyzer(url, watcher.Client.Token, watcher.Client.Analyzer)
-	watcherClient.Http = watcher.Client.Http
+	watcherClient := NewKubernetesClientWithAnalyzer(url, watcher.Client.Token, watcher.Client.analyzer)
+	watcherClient.http = watcher.Client.http
 	req, _ := watcherClient.CreateRequest("GET", url, nil)
-	resp, _ := watcherClient.Http.Do(req)
+	resp, _ := watcherClient.http.Do(req)
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, _ := reader.ReadBytes('\n')

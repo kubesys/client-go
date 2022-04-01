@@ -47,12 +47,14 @@ type KubernetesClient struct {
 
 func NewKubernetesClient(url string, token string) *KubernetesClient {
 	client := new(KubernetesClient)
+
 	if strings.HasSuffix(url, "/") {
 		client.Url = url[0 : len(url)-1]
 	} else {
 		client.Url = url
 	}
 	client.Token = token
+
 	client.http = &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}}
@@ -82,6 +84,17 @@ func NewKubernetesClientWithKubeConfig(kubeConfig string) (*KubernetesClient, er
 	client.http = httpClient
 	client.analyzer = NewKubernetesAnalyzer()
 	return client, nil
+}
+
+func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
+	client := new(KubernetesClient)
+	client.Url = url
+	client.Token = token
+	client.http = &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+	client.analyzer = analyzer
+	return client
 }
 
 func (client *KubernetesClient) Init() {

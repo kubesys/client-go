@@ -8,7 +8,7 @@ package kubesys
  *      date  : 2021/4/8
  */
 func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
-	ruleBase := client.Analyzer.RuleBase
+	ruleBase := client.analyzer.RuleBase
 	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
 	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
 	url += ruleBase.FullKindToNameMapper[fullKind]
@@ -42,6 +42,3 @@ func (client *KubernetesClient) UpdateResourceStatusUrl(fullKind string, namespa
 func (client *KubernetesClient) BindingResourceStatusUrl(fullKind string, namespace string, name string) string {
 	return client.baseUrl(fullKind, namespace) + "/" + name + "/binding"
 }
-
-
-

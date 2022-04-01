@@ -5,19 +5,16 @@ package kubesys
 
 import (
 	"encoding/json"
-	jsonObj "github.com/kubesys/client-go/pkg/json"
+	"github.com/tidwall/gjson"
 )
 
 /**
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/9/30
  */
-func ToJsonObject(bytes []byte) *jsonObj.JsonObject {
-	json, err := jsonObj.ParseObject(string(bytes))
-	if err != nil {
-		return nil
-	}
-	return json
+
+func ToJsonObject(bytes []byte) gjson.Result {
+	return gjson.Parse(string(bytes))
 }
 
 func ToGolangMap(bytes []byte) map[string]interface{} {

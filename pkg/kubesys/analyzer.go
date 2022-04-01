@@ -11,9 +11,10 @@ import (
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
  */
+
 type KubernetesAnalyzer struct {
-	RuleBase     *RuleBase
-	Registry     *Registry
+	RuleBase *RuleBase
+	Registry *Registry
 }
 
 func NewKubernetesAnalyzer() *KubernetesAnalyzer {
@@ -28,7 +29,6 @@ func NewKubernetesAnalyzer() *KubernetesAnalyzer {
 	ruleBase.FullKindToVersionMapper = make(map[string]string)
 	ruleBase.FullKindToGroupMapper = make(map[string]string)
 	ruleBase.FullKindToVerbsMapper = make(map[string]interface{})
-
 
 	analyzer := new(KubernetesAnalyzer)
 	analyzer.RuleBase = ruleBase
