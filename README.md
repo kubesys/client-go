@@ -5,6 +5,12 @@ We expect to provide a go client:
 - **Usability**. Developers just need to learn to write json/yaml(kubernetes native style) from [Kubernetes documentation](https://kubernetes.io/docs/home/).
 - **Integration**. It can work with the other Kubernetes clients, such as  [official](https://github.com/kubernetes-client/go).
 
+This project is based on the following softwares.
+
+| NAME  |   Website                       | LICENSE         | 
+|-------|---------------------------------|-----------------|
+| gjson |  https://github.com/tidwall/gjson | MIT  |
+
 ## Comparison
 
 |                           | [official](https://github.com/kubernetes-client/go) | [cdk8s](https://cdk8s.io/) | [this project](https://github.com/kubesys/kubernetes-client-go)  | 
@@ -12,6 +18,7 @@ We expect to provide a go client:
 |        Compatibility                      | for kubernetes-native kinds    | for crd kinds                 |  for both |
 |  Support customized Kubernetes resources  |  a lot of development          | a lot of development          |  zero-deployment     |
 |    Works with the other SDKs              |  complex                       | complex                       |  simple              |     
+
 
 ## Architecture
 
@@ -134,5 +141,5 @@ go mod tidy
 
 ## RoadMap
 
-- 1.0.x: product ready
-  - 1.0.0: using gojson
+- 2.0.x: product ready
+  - 2.0.0: using gjson
