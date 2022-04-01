@@ -13,21 +13,19 @@ import (
  */
 func listen(client *KubernetesClient, registry *Registry) {
 
-	crds,_ := client.ListResources("CustomResourceDefinition", "")
+	crds, _ := client.ListResources("CustomResourceDefinition", "")
 
-	items := ToJsonObject(crds).GetJsonArray("items")
+	items := ToJsonObject(crds).Get("items").Array()
 
-	for i := 0; i < len(items.Values()); i++ {
-		item := items.GetJsonObject(i)
-		fmt.Println(item.ToString())
-		group, _ := item.GetJsonObject("spec").GetString("group")
-		vers := item.GetJsonObject("spec").GetJsonArray("versions")
-		for j := 0; j < len(vers.Values()); j++ {
-			ver, _ := vers.GetJsonObject(j).GetString("name")
+	for i := 0; i < len(items); i++ {
+		item := items[i]
+		fmt.Println(item.String())
+		group := item.Get("spec").Get("group").String()
+		vers := item.Get("spec").Get("versions").Array()
+		for j := 0; j < len(vers); j++ {
+			ver := vers[i].Get("name").String()
 			url := client.Url + "/apis/" + group + "/" + ver
 			register(client, url, registry)
 		}
 	}
 }
-
-

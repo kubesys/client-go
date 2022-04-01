@@ -1,11 +1,8 @@
-module client-go
+module github.com/kubesys/client-go
 
 go 1.18
 
-require (
-	github.com/kubesys/client-go v1.1.2
-	github.com/tidwall/gjson v1.14.0
-)
+require github.com/tidwall/gjson v1.14.0
 
 require (
 	github.com/tidwall/match v1.1.1 // indirect

@@ -36,7 +36,7 @@ type KubernetesClient struct {
 	Url      string              // required, user input
 	Token    string              // required, user input
 	http     *http.Client        // required, automatically created based on Url and Token
-	analyzer *KubernetesAnalyzer // required, automatically register all Kubernetes resources based on Http
+	analyzer *KubernetesAnalyzer // required, user input or automatically register all Kubernetes resources based on Http
 }
 
 /************************************************************
@@ -46,19 +46,22 @@ type KubernetesClient struct {
  *************************************************************/
 
 func NewKubernetesClient(url string, token string) *KubernetesClient {
+	// init a NewKubernetesClient object
 	client := new(KubernetesClient)
 
+	// assignment
 	if strings.HasSuffix(url, "/") {
 		client.Url = url[0 : len(url)-1]
 	} else {
 		client.Url = url
 	}
 	client.Token = token
-
 	client.http = &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}}
 	client.analyzer = NewKubernetesAnalyzer()
+
+	// return
 	return client
 }
 
