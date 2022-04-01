@@ -18,14 +18,25 @@ import (
 )
 
 /**
+ * KubernetesClient is used for creating a connection between users' application and Kubernetes server.
+ * It provides an easy-to-use way to Create, Update, Delete, Get, List and Watch all Kubernetes resources.
+ *
+ *      since : v2.0.0
  *      author: wuheng@iscas.ac.cn
- *      date  : 2021/4/8
+ *      date  : 2022/4/1
  */
+
+/************************************************************
+ *
+ *      struct
+ *
+ *************************************************************/
+
 type KubernetesClient struct {
-	Url      string
-	Token    string
-	Http     *http.Client
-	Analyzer *KubernetesAnalyzer
+	Url      string              // required, user input
+	Token    string              // required, user input
+	http     *http.Client        // required, automatically created based on Url and Token
+	analyzer *KubernetesAnalyzer // required, automatically register all Kubernetes resources based on Http
 }
 
 /************************************************************
@@ -33,6 +44,7 @@ type KubernetesClient struct {
  *      initialization
  *
  *************************************************************/
+
 func NewKubernetesClient(url string, token string) *KubernetesClient {
 	client := new(KubernetesClient)
 	if strings.HasSuffix(url, "/") {
@@ -41,10 +53,10 @@ func NewKubernetesClient(url string, token string) *KubernetesClient {
 		client.Url = url
 	}
 	client.Token = token
-	client.Http = &http.Client{Transport: &http.Transport{
+	client.http = &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}}
-	client.Analyzer = NewKubernetesAnalyzer()
+	client.analyzer = NewKubernetesAnalyzer()
 	return client
 }
 
@@ -67,24 +79,13 @@ func NewKubernetesClientWithKubeConfig(kubeConfig string) (*KubernetesClient, er
 	if err != nil {
 		return nil, err
 	}
-	client.Http = httpClient
-	client.Analyzer = NewKubernetesAnalyzer()
+	client.http = httpClient
+	client.analyzer = NewKubernetesAnalyzer()
 	return client, nil
 }
 
-func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
-	client := new(KubernetesClient)
-	client.Url = url
-	client.Token = token
-	client.Http = &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}}
-	client.Analyzer = analyzer
-	return client
-}
-
 func (client *KubernetesClient) Init() {
-	client.Analyzer.Learning(client)
+	client.analyzer.Learning(client)
 }
 
 /************************************************************
@@ -92,8 +93,9 @@ func (client *KubernetesClient) Init() {
  *      Common
  *
  *************************************************************/
+
 func (client *KubernetesClient) RequestResource(request *http.Request) ([]byte, error) {
-	res, err := client.Http.Do(request)
+	res, err := client.http.Do(request)
 	if res.StatusCode != http.StatusOK {
 		if err != nil {
 			return nil, errors.New("request status " + res.Status + ": " + err.Error())
@@ -165,7 +167,7 @@ func name(jsonObj gjson.Result) string {
 }
 
 func (client *KubernetesClient) getResponse(fullKind string, namespace string) string {
-	ruleBase := client.Analyzer.RuleBase
+	ruleBase := client.analyzer.RuleBase
 	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
 	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
 	url += ruleBase.FullKindToNameMapper[fullKind]
@@ -227,7 +229,7 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 
 func (client *KubernetesClient) DeleteResource(kind string, namespace string, name string) ([]byte, error) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +246,7 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 
 func (client *KubernetesClient) GetResource(kind string, namespace string, name string) ([]byte, error) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +263,7 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 
 func (client *KubernetesClient) ListResources(kind string, namespace string) ([]byte, error) {
 
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +323,7 @@ func (client *KubernetesClient) BindResources(pod gjson.Result, host string) ([]
 
 func (client *KubernetesClient) WatchResource(kind string, namespace string, name string, watcher *KubernetesWatcher) {
 
-	ruleBase := client.Analyzer.RuleBase
+	ruleBase := client.analyzer.RuleBase
 	fullKind, err := checkAndReturnRealKind(kind, ruleBase.KindToFullKindMapper)
 
 	if err != nil {
@@ -338,7 +340,7 @@ func (client *KubernetesClient) WatchResource(kind string, namespace string, nam
 
 func (client *KubernetesClient) WatchResources(kind string, namespace string, watcher *KubernetesWatcher) {
 
-	ruleBase := client.Analyzer.RuleBase
+	ruleBase := client.analyzer.RuleBase
 	fullKind, err := checkAndReturnRealKind(kind, ruleBase.KindToFullKindMapper)
 
 	if err != nil {
@@ -359,7 +361,7 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
  *
  *************************************************************/
 func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) ([]byte, error) {
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -384,8 +386,9 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
  *      With Field Filter
  *
  *************************************************************/
+
 func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, namespace string, fields map[string]string) ([]byte, error) {
-	fullKind, err := checkAndReturnRealKind(kind, client.Analyzer.RuleBase.KindToFullKindMapper)
+	fullKind, err := checkAndReturnRealKind(kind, client.analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +416,7 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 
 func (client *KubernetesClient) GetKinds() []string {
 	i := 0
-	mapper := client.Analyzer.RuleBase.KindToFullKindMapper
+	mapper := client.analyzer.RuleBase.KindToFullKindMapper
 	array := make([]string, len(mapper))
 	for key, _ := range mapper {
 		array[i] = key
@@ -424,7 +427,7 @@ func (client *KubernetesClient) GetKinds() []string {
 
 func (client *KubernetesClient) GetFullKinds() []string {
 	i := 0
-	mapper := client.Analyzer.RuleBase.FullKindToNameMapper
+	mapper := client.analyzer.RuleBase.FullKindToNameMapper
 	array := make([]string, len(mapper))
 	for key, _ := range mapper {
 		array[i] = key
@@ -436,7 +439,7 @@ func (client *KubernetesClient) GetFullKinds() []string {
 func (client *KubernetesClient) GetKindDesc() []byte {
 	var desc = make(map[string]interface{})
 
-	ruleBase := client.Analyzer.RuleBase
+	ruleBase := client.analyzer.RuleBase
 	for fullKind, _ := range ruleBase.FullKindToNameMapper {
 		var value = make(map[string]interface{})
 		value["apiVersion"] = ruleBase.FullKindToVersionMapper[fullKind]
