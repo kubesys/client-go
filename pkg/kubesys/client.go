@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	jsonObj "github.com/kubesys/client-go/pkg/json"
+	"github.com/tidwall/gjson"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -133,17 +133,18 @@ func isNamespaced(supportNS bool, value string) string {
 	return ""
 }
 
-func namespace(jsonObj *jsonObj.JsonObject) string {
+func namespace(jsonObj gjson.Result) string {
+
 	namespace := ""
-	if jsonObj.GetJsonObject("metadata").HasKey("namespace") {
-		namespace, _ = jsonObj.GetJsonObject("metadata").GetString("namespace")
+	if jsonObj.Get("metadata").Get("namespace").Exists() {
+		namespace = jsonObj.Get("metadata").Get("namespace").String()
 	}
 	return namespace
 }
 
-func fullKind(jsonObj *jsonObj.JsonObject) string {
-	kind, _ := jsonObj.GetString("kind")
-	apiVersion, _ := jsonObj.GetString("apiVersion")
+func fullKind(jsonObj gjson.Result) string {
+	kind := jsonObj.Get("kind").String()
+	apiVersion := jsonObj.Get("kind").Get("apiVersion").String()
 	index := strings.Index(apiVersion, "/")
 	if index == -1 {
 		return kind
@@ -159,9 +160,8 @@ func kind(fullKind string) string {
 	return fullKind[index+1:]
 }
 
-func name(jsonObj *jsonObj.JsonObject) string {
-	name, _ := jsonObj.GetJsonObject("metadata").GetString("name")
-	return name
+func name(jsonObj gjson.Result) string {
+	return jsonObj.Get("metadata").Get("name").String()
 }
 
 func (client *KubernetesClient) getResponse(fullKind string, namespace string) string {
@@ -199,14 +199,11 @@ func checkAndReturnRealKind(kind string, mapper map[string][]string) (string, er
 
 func (client *KubernetesClient) CreateResource(jsonStr string) ([]byte, error) {
 
-	inputJson, err := jsonObj.ParseObject(jsonStr)
-	if err != nil {
-		return nil, err
-	}
+	inputJson := gjson.Parse(jsonStr)
 
 	url := client.CreateResourceUrl(fullKind(inputJson), namespace(inputJson))
 	req, _ := client.CreateRequest("POST", url, strings.NewReader(jsonStr))
-	_, err = client.RequestResource(req)
+	_, err := client.RequestResource(req)
 	if err != nil {
 		return nil, err
 	}
@@ -216,10 +213,7 @@ func (client *KubernetesClient) CreateResource(jsonStr string) ([]byte, error) {
 
 func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 
-	inputJson, err := jsonObj.ParseObject(jsonStr)
-	if err != nil {
-		return nil, err
-	}
+	inputJson := gjson.Parse(jsonStr)
 
 	url := client.UpdateResourceUrl(fullKind(inputJson), namespace(inputJson), name(inputJson))
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
@@ -283,10 +277,7 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) ([]
 }
 
 func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) ([]byte, error) {
-	inputJson, err := jsonObj.ParseObject(jsonStr)
-	if err != nil {
-		return nil, err
-	}
+	inputJson := gjson.Parse(jsonStr)
 
 	url := client.UpdateResourceStatusUrl(fullKind(inputJson), namespace(inputJson), name(inputJson))
 	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
@@ -298,14 +289,14 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) ([]byte, er
 	return value, nil
 }
 
-func (client *KubernetesClient) BindResources(pod *jsonObj.JsonObject, host string) ([]byte, error) {
+func (client *KubernetesClient) BindResources(pod gjson.Result, host string) ([]byte, error) {
 	var podJson = make(map[string]interface{})
 	podJson["apiVersion"] = "v1"
 	podJson["kind"] = "Binding"
 
 	var meta = make(map[string]interface{})
-	meta["name"], _ = pod.GetJsonObject("metadata").GetString("name")
-	meta["namespace"], _ = pod.GetJsonObject("metadata").GetString("namespace")
+	meta["name"] = pod.Get("metadata").Get("name").String()
+	meta["namespace"] = pod.Get("metadata").Get("namespace").String()
 	podJson["metadata"] = meta
 
 	var target = make(map[string]interface{})
