@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kubesys/client-go/pkg/kubesys"
+	"github.com/tidwall/gjson"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 
 	//createResource(client)
 	//getResource(client)
-	//updateResource(client)
+	updateResource(client)
 	//deleteResource(client)
 	//listResources(client)
 
@@ -31,7 +32,7 @@ func main() {
 	//watchResource(client)
 	//fmt.Println(client.GetKinds())
 	//fmt.Println(client.GetFullKinds())
-	fmt.Println(kubesys.ToJsonObject(client.GetKindDesc()).ToString())
+	//fmt.Println(kubesys.ToJsonObject(client.GetKindDesc()).ToString())
 }
 
 func watchResource(client *kubesys.KubernetesClient) {
@@ -50,25 +51,25 @@ func createResource(client *kubesys.KubernetesClient) {
 		fmt.Println(err)
 	}
 	json := kubesys.ToJsonObject(jsonRes)
-	fmt.Println(json.ToString())
+	fmt.Println(json.String())
 }
 
 func deleteResource(client *kubesys.KubernetesClient) {
 	jsonRes, _ := client.DeleteResource("Pod", "default", "busybox")
 	json := kubesys.ToJsonObject(jsonRes)
-	fmt.Println(json.ToString())
+	fmt.Println(json.String())
 }
 
 func getResource(client *kubesys.KubernetesClient) {
 	jsonRes, _ := client.GetResource("Pod", "default", "busybox")
 	//fmt.Println(kubesys.ToJsonObject(jsonRes))
-	fmt.Println(kubesys.ToGolangMap(jsonRes)["metadata"].(map[string]interface {})["name"].(string))
+	fmt.Println(kubesys.ToGolangMap(jsonRes)["metadata"].(map[string]interface{})["name"].(string))
 }
 
 func listResources(client *kubesys.KubernetesClient) {
-	jsonRes,_ := client.ListResources("Deployment", "")
+	jsonRes, _ := client.ListResources("Deployment", "")
 	json := kubesys.ToJsonObject(jsonRes)
-	fmt.Println(json.ToString())
+	fmt.Println(json.String())
 }
 
 func createPod() string {
@@ -77,37 +78,38 @@ func createPod() string {
 
 func updateResource(client *kubesys.KubernetesClient) {
 
-	labels := make(map[string]interface{})
-	labels["test"] = "test"
+	objRes, _ := client.GetResource("Pod", "default", "busybox")
+	obj := kubesys.ToJsonObject(objRes).Map()
+	metadata := obj["metadata"].Map()
 
-	objRes, _  := client.GetResource("Pod", "default", "busybox")
-	obj := kubesys.ToJsonObject(objRes)
-	metadata := obj.GetJsonObject("metadata")
-	metadata.Put("labels", labels)
-	fmt.Println(metadata.ToString())
+	delete(metadata, "annotations")
 
-	obj.Put("metadata", metadata.ToInterface())
-	fmt.Println(obj.ToString())
+	metaStr, _ := json.Marshal(metadata)
 
-	jsonRes,err := client.UpdateResource(obj.ToString())
+	fmt.Println(string(metaStr))
+	obj["metadata"] = gjson.Parse(string(metaStr))
+	fmt.Println("----")
+	objStr, _ := json.Marshal(obj)
+	fmt.Println(string(objStr))
+	fmt.Println("----")
+	jsonRes, err := client.UpdateResource(string(objStr))
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(kubesys.ToJsonObject(jsonRes).ToString())
+	fmt.Println(kubesys.ToJsonObject(jsonRes).String())
 }
 
-type PrintWatchHandler struct {}
+type PrintWatchHandler struct{}
 
 func (p PrintWatchHandler) DoAdded(obj map[string]interface{}) {
-	json,_ :=json.Marshal(obj)
+	json, _ := json.Marshal(obj)
 	fmt.Println("ADDED: " + string(json))
 }
 func (p PrintWatchHandler) DoModified(obj map[string]interface{}) {
-	json,_ :=json.Marshal(obj)
+	json, _ := json.Marshal(obj)
 	fmt.Println("MODIFIED: " + string(json))
 }
 func (p PrintWatchHandler) DoDeleted(obj map[string]interface{}) {
-	json,_ :=json.Marshal(obj)
+	json, _ := json.Marshal(obj)
 	fmt.Println("DELETED: " + string(json))
 }
-
