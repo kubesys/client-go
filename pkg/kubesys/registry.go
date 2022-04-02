@@ -10,7 +10,7 @@ import "encoding/json"
  *      date  : 2021/4/8
  */
 type Registry struct {
-	RuleBase     *RuleBase
+	RuleBase *RuleBase
 }
 
 func NewRegistry(ruleBase *RuleBase) *Registry {
@@ -21,8 +21,8 @@ func NewRegistry(ruleBase *RuleBase) *Registry {
 
 func register(client *KubernetesClient, url string, registry *Registry) {
 
-	resourceRequest, _ := client.CreateRequest("GET", url, nil)
-	resourceStringValues, _ := client.RequestResource(resourceRequest)
+	resourceRequest, _ := client.createRequest("GET", url, nil)
+	resourceStringValues, _ := client.doRequest(resourceRequest)
 
 	resourceValues := make(map[string]interface{})
 	json.Unmarshal([]byte(resourceStringValues), &resourceValues)
@@ -46,5 +46,3 @@ func register(client *KubernetesClient, url string, registry *Registry) {
 		}
 	}
 }
-
-

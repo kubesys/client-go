@@ -1,6 +1,7 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
+
 package kubesys
 
 import (
@@ -12,8 +13,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -45,63 +44,65 @@ type KubernetesClient struct {
  *
  *************************************************************/
 
-func NewKubernetesClient(url string, token string) *KubernetesClient {
+func createClient(url string, token string, http *http.Client, analyzer *KubernetesAnalyzer) *KubernetesClient {
 	// init a NewKubernetesClient object
 	client := new(KubernetesClient)
 
 	// assignment
-	if strings.HasSuffix(url, "/") {
-		client.Url = url[0 : len(url)-1]
-	} else {
-		client.Url = url
-	}
-	client.Token = token
-	client.http = &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}}
-	client.analyzer = NewKubernetesAnalyzer()
+	client.Url = checkedUrl(url)
+	client.Token = checkedToken(token)
+	client.http = http
+	client.analyzer = analyzer
 
 	// return
 	return client
 }
 
-func NewKubernetesClientWithDefaultKubeConfig() (*KubernetesClient, error) {
-	client, err := NewKubernetesClientWithKubeConfig("/etc/kubernetes/admin.conf")
-	if err == nil {
-		return client, err
-	}
-	return NewKubernetesClientWithKubeConfig(filepath.Join(os.Getenv("HOME"), ".kube", "config"))
+func NewKubernetesClient(url string, token string) *KubernetesClient {
+	return createClient(url, token, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true},
+		}}, NewKubernetesAnalyzer())
 }
 
-func NewKubernetesClientWithKubeConfig(kubeConfig string) (*KubernetesClient, error) {
+// NewKubernetesClientWithDefaultKubeConfig TODO
+func NewKubernetesClientWithDefaultKubeConfig() *KubernetesClient {
+	// filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	return NewKubernetesClientWithKubeConfig("/etc/kubernetes/admin.conf")
+}
+
+// NewKubernetesClientWithKubeConfig TODO
+func NewKubernetesClientWithKubeConfig(kubeConfig string) *KubernetesClient {
 	config, err := NewForConfig(kubeConfig)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	client := new(KubernetesClient)
-	client.Url = config.Server
+
 	httpClient, err := HTTPClientFor(config)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	client.http = httpClient
-	client.analyzer = NewKubernetesAnalyzer()
-	return client, nil
+
+	// TODO
+	token := ""
+	return createClient(config.Server, token, httpClient, NewKubernetesAnalyzer())
 }
 
 func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
-	client := new(KubernetesClient)
-	client.Url = url
-	client.Token = token
-	client.http = &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}}
-	client.analyzer = analyzer
-	return client
+	return createClient(url, token, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true},
+		}}, analyzer)
 }
 
 func (client *KubernetesClient) Init() {
-	client.analyzer.Learning(client)
+	// not initialized
+	if len(client.analyzer.RuleBase.KindToFullKindMapper) == 0 {
+		// initialing
+		client.analyzer.Learning(client)
+	}
 }
 
 /************************************************************
@@ -110,14 +111,14 @@ func (client *KubernetesClient) Init() {
  *
  *************************************************************/
 
-func (client *KubernetesClient) RequestResource(request *http.Request) ([]byte, error) {
+func (client *KubernetesClient) doRequest(request *http.Request) ([]byte, error) {
 	res, err := client.http.Do(request)
+	if err != nil {
+		return nil, errors.New("request error:" + err.Error())
+	}
+
 	if res.StatusCode != http.StatusOK {
-		if err != nil {
-			return nil, errors.New("request status " + res.Status + ": " + err.Error())
-		} else {
-			return nil, errors.New("request status " + res.Status)
-		}
+		return nil, errors.New("wrong request status: " + res.Status)
 	}
 
 	defer res.Body.Close()
@@ -126,10 +127,11 @@ func (client *KubernetesClient) RequestResource(request *http.Request) ([]byte, 
 	if err != nil {
 		return nil, err
 	}
+
 	return body, nil
 }
 
-func (client *KubernetesClient) CreateRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (client *KubernetesClient) createRequest(method, url string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, body)
 
 	if err != nil {
@@ -141,6 +143,7 @@ func (client *KubernetesClient) CreateRequest(method, url string, body io.Reader
 	if body != nil {
 		req.Header.Add("Content-Type", "application/json")
 	}
+
 	return req, nil
 }
 
@@ -220,8 +223,8 @@ func (client *KubernetesClient) CreateResource(jsonStr string) ([]byte, error) {
 	inputJson := gjson.Parse(jsonStr)
 
 	url := client.CreateResourceUrl(fullKind(inputJson), namespace(inputJson))
-	req, _ := client.CreateRequest("POST", url, strings.NewReader(jsonStr))
-	_, err := client.RequestResource(req)
+	req, _ := client.createRequest("POST", url, strings.NewReader(jsonStr))
+	_, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -234,8 +237,8 @@ func (client *KubernetesClient) UpdateResource(jsonStr string) ([]byte, error) {
 	inputJson := gjson.Parse(jsonStr)
 
 	url := client.UpdateResourceUrl(fullKind(inputJson), namespace(inputJson), name(inputJson))
-	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("PUT", url, strings.NewReader(jsonStr))
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -251,8 +254,8 @@ func (client *KubernetesClient) DeleteResource(kind string, namespace string, na
 	}
 
 	url := client.DeleteResourceUrl(fullKind, namespace, name)
-	req, _ := client.CreateRequest("DELETE", url, nil)
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("DELETE", url, nil)
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -268,8 +271,8 @@ func (client *KubernetesClient) GetResource(kind string, namespace string, name 
 	}
 
 	url := client.GetResourceUrl(fullKind, namespace, name)
-	req, _ := client.CreateRequest("GET", url, nil)
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("GET", url, nil)
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -285,8 +288,8 @@ func (client *KubernetesClient) ListResources(kind string, namespace string) ([]
 	}
 
 	url := client.ListResourcesUrl(fullKind, namespace)
-	req, _ := client.CreateRequest("GET", url, nil)
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("GET", url, nil)
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -298,8 +301,8 @@ func (client *KubernetesClient) UpdateResourceStatus(jsonStr string) ([]byte, er
 	inputJson := gjson.Parse(jsonStr)
 
 	url := client.UpdateResourceStatusUrl(fullKind(inputJson), namespace(inputJson), name(inputJson))
-	req, _ := client.CreateRequest("PUT", url, strings.NewReader(jsonStr))
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("PUT", url, strings.NewReader(jsonStr))
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -328,8 +331,8 @@ func (client *KubernetesClient) BindResources(pod gjson.Result, host string) ([]
 	url := client.BindingResourceStatusUrl(fullKind, namespace, name(pod))
 
 	jsonBytes, _ := json.Marshal(podJson)
-	req, _ := client.CreateRequest("POST", url, strings.NewReader(string(jsonBytes)))
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("POST", url, strings.NewReader(string(jsonBytes)))
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -376,6 +379,7 @@ func (client *KubernetesClient) WatchResources(kind string, namespace string, wa
  *      With Label Filter
  *
  *************************************************************/
+
 func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, namespace string, labels map[string]string) ([]byte, error) {
 	fullKind, err := checkAndReturnRealKind(kind, client.analyzer.RuleBase.KindToFullKindMapper)
 	if err != nil {
@@ -388,8 +392,8 @@ func (client *KubernetesClient) ListResourcesWithLabelSelector(kind string, name
 	}
 	url = url[:len(url)-1]
 
-	req, _ := client.CreateRequest("GET", url, nil)
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("GET", url, nil)
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -415,8 +419,8 @@ func (client *KubernetesClient) ListResourcesWithFieldSelector(kind string, name
 	}
 	url = url[:len(url)-1]
 
-	req, _ := client.CreateRequest("GET", url, nil)
-	value, err := client.RequestResource(req)
+	req, _ := client.createRequest("GET", url, nil)
+	value, err := client.doRequest(req)
 	if err != nil {
 		return nil, err
 	}

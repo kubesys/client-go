@@ -13,8 +13,8 @@ import (
  *      date  : 2021/9/30
  */
 func extract(client *KubernetesClient, registry *Registry) {
-	registryRequest, _ := client.CreateRequest("GET", client.Url, nil)
-	registryStringValues, _ := client.RequestResource(registryRequest)
+	registryRequest, _ := client.createRequest("GET", client.Url, nil)
+	registryStringValues, _ := client.doRequest(registryRequest)
 
 	registryValues := make(map[string]interface{})
 	json.Unmarshal([]byte(registryStringValues), &registryValues)
@@ -22,8 +22,7 @@ func extract(client *KubernetesClient, registry *Registry) {
 	for _, v := range registryValues["paths"].([]interface{}) {
 		path := v.(string)
 		if strings.HasPrefix(path, "/api") && (len(strings.Split(path, "/")) == 4 || strings.EqualFold(path, "/api/v1")) {
-			register(client, client.Url + path, registry)
+			register(client, client.Url+path, registry)
 		}
 	}
 }
-
