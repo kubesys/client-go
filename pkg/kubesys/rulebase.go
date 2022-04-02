@@ -7,6 +7,7 @@ package kubesys
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/9/30
  */
+
 type RuleBase struct {
 	KindToFullKindMapper      map[string][]string
 	FullKindToApiPrefixMapper map[string]string
@@ -18,4 +19,3 @@ type RuleBase struct {
 	FullKindToGroupMapper   map[string]string
 	FullKindToVerbsMapper   map[string]interface{}
 }
-

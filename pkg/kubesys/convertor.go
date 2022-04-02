@@ -1,6 +1,7 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
+
 package kubesys
 
 /**
@@ -10,7 +11,7 @@ package kubesys
 func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
 	ruleBase := client.analyzer.RuleBase
 	url := ruleBase.FullKindToApiPrefixMapper[fullKind] + "/"
-	url += isNamespaced(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
+	url += namespacePath(ruleBase.FullKindToNamespaceMapper[fullKind], namespace)
 	url += ruleBase.FullKindToNameMapper[fullKind]
 	return url
 }

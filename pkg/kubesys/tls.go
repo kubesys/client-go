@@ -18,6 +18,14 @@ import (
 	"time"
 )
 
+/**
+ * this class is used for creating a https connection.
+ *
+ *      since : v2.0.0
+ *      author: wuheng@iscas.ac.cn
+ *      date  : 2022/4/1
+ */
+
 type Config struct {
 	Server                   string
 	ClientCertificateData    string
