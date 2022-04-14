@@ -1,4 +1,4 @@
-module github.com/kubesys/client-go
+module client-go
 
 go 1.18
 

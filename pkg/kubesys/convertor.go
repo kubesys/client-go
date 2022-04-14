@@ -5,8 +5,12 @@
 package kubesys
 
 /**
+ * this class is used for get Url for various kinds and operates in Kubernetes
+ * see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/
+ *
  *      author: wuheng@iscas.ac.cn
- *      date  : 2021/4/8
+ *      date  : 2022/4/2
+ *      since : v2.0.0
  */
 func (client *KubernetesClient) baseUrl(fullKind string, namespace string) string {
 	ruleBase := client.analyzer.RuleBase

@@ -1,14 +1,19 @@
 /**
  * Copyright (2021, ) Institute of Software, Chinese Academy of Sciences
  */
+
 package kubesys
 
 import "encoding/json"
 
 /**
+ * This class is used for
+ *
  *      author: wuheng@iscas.ac.cn
  *      date  : 2021/4/8
+ *      since : v2.0.0
  */
+
 type Registry struct {
 	RuleBase *RuleBase
 }

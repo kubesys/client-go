@@ -10,6 +10,8 @@ This project is based on the following softwares.
 | NAME  |   Website                       | LICENSE         | 
 |-------|---------------------------------|-----------------|
 | gjson |  https://github.com/tidwall/gjson | MIT  |
+| match |  https://github.com/tidwall/match | MIT  |
+| pretty |  https://github.com/tidwall/pretty | MIT  |
 
 ## Comparison
 
@@ -142,4 +144,7 @@ go mod tidy
 ## RoadMap
 
 - 2.0.x: product ready
-  - 2.0.0: using gjson
+  - 2.0.0: using jsonparser
+  - 2.0.1: support kubeconfig
+  - 2.0.2: support yaml
+  - 2.0.3: 

@@ -20,10 +20,11 @@ import (
 
 /**
  * this class is used for creating a https connection.
+ * Note that this class is copy from Internet
  *
- *      since : v2.0.0
  *      author: wuheng@iscas.ac.cn
  *      date  : 2022/4/1
+ *      since : v2.0.0
  */
 
 type Config struct {

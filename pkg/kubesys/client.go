@@ -20,9 +20,9 @@ import (
  * this class is used for creating a connection between users' application and Kubernetes server.
  * It provides an easy-to-use way to Create, Update, Delete, Get, List and Watch all Kubernetes resources.
  *
- *      since : v2.0.0
  *      author: wuheng@iscas.ac.cn
  *      date  : 2022/4/1
+ *      since : v2.0.0
  */
 
 /************************************************************
