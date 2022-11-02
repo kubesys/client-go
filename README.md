@@ -147,4 +147,4 @@ go mod tidy
   - 2.0.0: using jsonparser
   - 2.0.1: support kubeconfig
   - 2.0.2: support yaml
-  - 2.0.3: 
+  - 2.0.3: support binding
