@@ -2,9 +2,9 @@
 package main
 
 import (
-	"client-go/pkg/kubesys"
 	"encoding/json"
 	"fmt"
+	"github.com/kubesys/client-go/pkg/kubesys"
 	"github.com/tidwall/gjson"
 )
 
@@ -12,7 +12,7 @@ func main() {
 
 	url := ""
 	tok := ""
-	
+
 	fmt.Println("---")
 	client := kubesys.NewKubernetesClient(url, tok)
 	client.Init()
