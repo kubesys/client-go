@@ -10,11 +10,8 @@ import (
 
 func main() {
 
-	url := ""
-	tok := ""
-
-	fmt.Println("---")
-	client := kubesys.NewKubernetesClient(url, tok)
+	fmt.Println("default token is /etc/kubernetes/admin.conf on Master")
+	client := kubesys.NewKubernetesClientWithKubeConfig(".token")
 	client.Init()
 	// client, err := kubesys.NewKubernetesClientWithDefaultKubeConfig()
 	// if err == nil {

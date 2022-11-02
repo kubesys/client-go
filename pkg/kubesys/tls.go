@@ -53,7 +53,7 @@ func NewForConfig(kubeConfig string) (*Config, error) {
 		if s == "" {
 			break
 		} else if strings.Contains(s, "server:") {
-			config.Server = strings.Replace(strings.Split(s, "server:")[1], "\n", "", -1)
+			config.Server = strings.Replace(strings.Split(s, "server:")[1], "\r\n", "", -1)
 			n++
 		} else if strings.Contains(s, "client-certificate-data:") {
 			config.ClientCertificateData = strings.Replace(strings.Split(s, "client-certificate-data:")[1], "\n", "", -1)

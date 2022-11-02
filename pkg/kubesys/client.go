@@ -84,9 +84,7 @@ func NewKubernetesClientWithKubeConfig(kubeConfig string) *KubernetesClient {
 		panic(err)
 	}
 
-	// TODO
-	token := ""
-	return createClient(config.Server, token, httpClient, NewKubernetesAnalyzer())
+	return createClient(config.Server, "", httpClient, NewKubernetesAnalyzer())
 }
 
 func NewKubernetesClientWithAnalyzer(url string, token string, analyzer *KubernetesAnalyzer) *KubernetesClient {
@@ -380,7 +378,9 @@ func (client *KubernetesClient) createRequest(method, url string, body io.Reader
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+client.Token)
+	if len(client.Token) != 0 {
+		req.Header.Add("Authorization", "Bearer "+client.Token)
+	}
 
 	if body != nil {
 		req.Header.Add("Content-Type", "application/json")
