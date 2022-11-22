@@ -1,9 +1,13 @@
 # client-go
 
 We expect to provide a go client:
-- **Flexibility**. It can support all Kubernetes-based systems with minimized extra development, such as [Openshift](https://www.redhat.com/en/technologies/cloud-computing/openshift), [istio](https://istio.io/), etc.
-- **Usability**. Developers just need to learn to write json/yaml(kubernetes native style) from [Kubernetes documentation](https://kubernetes.io/docs/home/).
-- **Integration**. It can work with the other Kubernetes clients, such as  [official](https://github.com/kubernetes-client/go).
+
+- **Flexibility**. It can support all Kubernetes-based systems with minimized extra development, such
+  as [Openshift](https://www.redhat.com/en/technologies/cloud-computing/openshift), [istio](https://istio.io/), etc.
+- **Usability**. Developers just need to learn to write json/yaml(kubernetes native style)
+  from [Kubernetes documentation](https://kubernetes.io/docs/home/).
+- **Integration**. It can work with the other Kubernetes clients, such
+  as  [official](https://github.com/kubernetes-client/go).
 
 This project is based on the following softwares.
 
@@ -21,20 +25,17 @@ This project is based on the following softwares.
 |  Support customized Kubernetes resources  |  a lot of development          | a lot of development          |  zero-deployment     |
 |    Works with the other SDKs              |  complex                       | complex                       |  simple              |     
 
-
 ## Architecture
 
 ![avatar](./docs/arch.png)
- 
-## Installation
 
+## Installation
 
 ```shell
 git clone --recursive https://github.com/kubesys/client-go
 ```
 
 ### Maven users
-
 
 ## Usage
 
@@ -45,9 +46,7 @@ git clone --recursive https://github.com/kubesys/client-go
     - [Get all kinds](#get-all-kinds)
     - [Work with other SDKs](#work-with-other-sdks)
 
-
 ### Creating a client
-
 
 There are two ways to create a client:
 
@@ -78,12 +77,11 @@ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | gre
 ```go
 client, err := kubesys.NewKubernetesClientWithDefaultKubeConfig()
 if err == nil {
-    fmt.Println("Failed to get kubeconfig.")
-    return
+fmt.Println("Failed to get kubeconfig.")
+return
 }
 client.Init()
 ```
-
 
 ### simple-example
 
@@ -94,13 +92,24 @@ Assume you have a json:
   "apiVersion": "v1",
   "kind": "Pod",
   "metadata": {
-    "name": "busybox",
-    "namespace": "default",
-    "labels": {
-      "test": "test"
-    }
+    "name": "busybox1",
+    "namespace": "default"
+  },
+  "spec": {
+    "containers": [
+      {
+        "command": [
+          "sleep",
+          "3600"
+        ],
+        "image": "busybox",
+        "imagePullPolicy": "IfNotPresent",
+        "name": "busybox"
+      }
+    ]
   }
 }
+
 ```
 
 List resources:
@@ -140,11 +149,10 @@ go mod init client-go
 go mod tidy
 ```
 
-
 ## RoadMap
 
 - 2.0.x: product ready
-  - 2.0.0: using jsonparser
-  - 2.0.1: support kubeconfig
-  - 2.0.2: support yaml
-  - 2.0.3: support binding
+    - 2.0.0: using jsonparser
+    - 2.0.1: support kubeconfig
+    - 2.0.2: support yaml
+    - 2.0.3: support binding
