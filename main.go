@@ -11,14 +11,10 @@ import (
 func main() {
 
 	fmt.Println("default token is /etc/kubernetes/admin.conf on Master")
-	client := kubesys.NewKubernetesClientWithKubeConfig(".token")
+	//client := kubesys.NewKubernetesClientWithKubeConfig(".token")
+	//client.Init()
+	client := kubesys.NewKubernetesClientWithDefaultKubeConfig()
 	client.Init()
-	// client, err := kubesys.NewKubernetesClientWithDefaultKubeConfig()
-	// if err == nil {
-	// 	fmt.Println("Failed to get kubeconfig.")
-	// 	return
-	// }
-	// client.Init()
 
 	//createResource(client)
 	//getResource(client)

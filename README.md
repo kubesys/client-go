@@ -75,11 +75,7 @@ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | gre
 - By kubeconfig:
 
 ```go
-client, err := kubesys.NewKubernetesClientWithDefaultKubeConfig()
-if err == nil {
-fmt.Println("Failed to get kubeconfig.")
-return
-}
+client := kubesys.NewKubernetesClientWithDefaultKubeConfig()
 client.Init()
 ```
 
