@@ -421,7 +421,8 @@ func kind(fullKind string) string {
 // deployments                       deploy       apps/v1                                true         Deployment
 func fullKind(jsonObj gjson.Result) string {
 	kind := jsonObj.Get("kind").String()
-	apiVersion := jsonObj.Get("kind").Get("apiVersion").String()
+	//apiVersion := jsonObj.Get("kind").Get("apiVersion").String()
+	apiVersion := jsonObj.Get("apiVersion").String()
 
 	index := strings.Index(apiVersion, "/")
 	if index == -1 {
