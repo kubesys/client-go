@@ -357,8 +357,8 @@ func (client *KubernetesClient) doRequest(request *http.Request) ([]byte, error)
 		return nil, errors.New("request error:" + err.Error())
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("wrong request status: " + res.Status)
+	if !(res.StatusCode >= http.StatusOK && res.StatusCode < http.StatusMultipleChoices) {
+		return nil, fmt.Errorf("wrong request status: %v\n", res)
 	}
 
 	defer res.Body.Close()
