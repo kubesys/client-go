@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: in-cluster-deployment
+  namespace: in-cluster-ns
+spec:
+  selector:
+    matchLabels:
+      app: in-cluster
+  template:
+    metadata:
+      labels:
+        app: in-cluster
+    spec:
+      containers:
+        - image: docker.io/gxxxh/in-cluster:latest
+          imagePullPolicy: Never
+          name: demo
+      serviceAccountName: in-cluster-sa

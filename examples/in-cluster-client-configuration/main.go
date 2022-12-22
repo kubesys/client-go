@@ -8,12 +8,14 @@ import (
 
 func main() {
 	client := kubesys.NewKubernetesClientInCluster()
+	client.Init()
 	for {
-		resp, err := client.ListResources("Pod", "default")
+		resp, err := client.ListResources("Pod", "in-cluster-ns")
 		if err != nil {
 			panic(err)
 		}
-		log.Println(resp)
+		log.Println(1)
+		log.Println(string(resp))
 		time.Sleep(100 * time.Second)
 	}
 

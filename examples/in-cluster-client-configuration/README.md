@@ -25,20 +25,29 @@ snippet to create role binding which will grant the default service account view
 permissions.
 
 ```
-kubectl create clusterrolebinding default-view --clusterrole=view --serviceaccount=default:default
+kubectl apply -f yamls/account.yaml
 ```
+
+Notice that, in order to init the client, the pod need thr right to access the kubernetes address,
+which is defined in ClusterRole' nonResourceURLs
+
+```yaml
+  - nonResourceURLs:
+      - /
+    verbs:
+      - get
+```
+
+And you need to bind the account to system:discovery to get the access to other urls(/api, /apis, /api/*, /apis/*)
 
 Then, run the image in a Pod with a single instance Deployment:
 
-    kubectl run --rm -i demo --image=in-cluster
-
-    There are 4 pods in the cluster
-    There are 4 pods in the cluster
-    There are 4 pods in the cluster
-    ...
+    kubectl apply -f yamls/deployment.yaml
 
 The example now runs on Kubernetes API and successfully queries the number of
 pods in the cluster every 100 seconds.
+
+You can use `kubectl logs` to see the result. 
 
 ### Clean up
 
