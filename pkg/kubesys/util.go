@@ -26,9 +26,7 @@ func checkedUrl(url string) string {
 }
 
 func checkedToken(token string) string {
-	// just support token in Kubernetes Secret
-	//if len(token) == 950 || len(token) == 0 {
-	if len(token) == 942 || len(token) == 0 {
+	if len(token) == 0 {
 		return token
 	}
 	panic("just support token in Kubernetes Secret")
