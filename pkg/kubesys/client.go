@@ -52,7 +52,8 @@ func createClient(url string, token string, http *http.Client, analyzer *Kuberne
 
 	// assignment
 	client.Url = checkedUrl(url)
-	client.Token = checkedToken(token)
+	//client.Token = checkedToken(token)
+	client.Token = token
 	client.http = http
 	client.analyzer = analyzer
 
@@ -77,11 +78,11 @@ func NewKubernetesClientInCluster() *KubernetesClient {
 	if err != nil {
 		panic(err)
 	}
-	return NewKubernetesClient("https://"+net.JoinHostPort(host, port), string(token))
+	return NewKubernetesClient("https://"+net.JoinHostPort(host, port), checkedToken(string(token)))
 }
 
 func NewKubernetesClient(url string, token string) *KubernetesClient {
-	return createClient(url, token, &http.Client{
+	return createClient(url, checkedToken(token), &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true},

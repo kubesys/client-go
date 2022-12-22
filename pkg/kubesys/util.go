@@ -26,10 +26,10 @@ func checkedUrl(url string) string {
 }
 
 func checkedToken(token string) string {
-	if len(token) == 0 {
+	if len(token) != 0 {
 		return token
 	}
-	panic("just support token in Kubernetes Secret")
+	panic("token is empty")
 }
 
 func ToJsonObject(bytes []byte) gjson.Result {
