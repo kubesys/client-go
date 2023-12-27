@@ -7,6 +7,7 @@ package kubesys
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -25,8 +26,11 @@ func extract(client *KubernetesClient, registry *Registry) {
 		errors.New(err.Error())
 	}
 
-	registryStringValues, _ := client.doRequest(registryRequest)
-
+	registryStringValues, err := client.doRequest(registryRequest)
+	if err != nil {
+		fmt.Println("request registry string values error, ", err)
+		panic(err)
+	}
 	// if it is successful, the output is.
 	// {
 	//    "paths": [
