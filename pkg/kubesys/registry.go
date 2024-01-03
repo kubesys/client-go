@@ -4,7 +4,10 @@
 
 package kubesys
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 /**
  * This class is used for
@@ -26,9 +29,18 @@ func NewRegistry(ruleBase *RuleBase) *Registry {
 
 func register(client *KubernetesClient, url string, registry *Registry) {
 
-	resourceRequest, _ := client.createRequest("GET", url, nil)
-	resourceStringValues, _ := client.doRequest(resourceRequest)
+	resourceRequest, err := client.createRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("createRequest error", err)
+		panic(err)
+	}
 
+	resourceStringValues, err := client.doRequest(resourceRequest)
+
+	if err != nil {
+		fmt.Println("request resource string values error", err)
+		panic(err)
+	}
 	resourceValues := make(map[string]interface{})
 	json.Unmarshal([]byte(resourceStringValues), &resourceValues)
 

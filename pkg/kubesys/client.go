@@ -469,7 +469,7 @@ func toFullKind(kind string, mapper map[string][]string) (string, error) {
 	if index == -1 {
 		// it is just kind, we need to get fullKind
 		if len(mapper[kind]) == 0 {
-			return "", errors.New("wrong kind, please invoking 'GetKinds'")
+			return "", errors.New(fmt.Sprintf("wrong kind %s, please invoking 'GetKinds'", kind))
 		} else if len(mapper[kind]) == 1 {
 			return mapper[kind][0], nil
 		} else {
