@@ -1,6 +1,6 @@
 module github.com/kubesys/client-go
 
-go 1.21
+go 1.21.5
 
 require github.com/tidwall/gjson v1.14.0
 
